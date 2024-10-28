@@ -39,10 +39,12 @@
 .landingMainContainer>div:nth-child(1) {
   font-size: 2.2rem;
 }
-.landingMainContainer > div:nth-child(1) div[role='button'] {
+.landingMainContainer>div:nth-child(1) div[role='button'] {
   background: #D97500;
-  padding: 10px; 
-  border-radius: 5px; 
+  width: fit-content;
+  padding: 1rem;
+  border-radius: 20px;
+  margin-top: 1.9rem;
 }
 
 .landingMainContainer > div:nth-child(1) div[role='button'] > * {
