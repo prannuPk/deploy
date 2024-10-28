@@ -39,6 +39,11 @@
 .landingMainContainer>div:nth-child(1) {
   font-size: 2.2rem;
 }
+.landingMainContainer > div:nth-child(1) div[role='button'] {
+  background: #D97500;
+  padding: 10px; 
+  border-radius: 5px; 
+}
 
 .landingMainContainer > div:nth-child(1) div[role='button'] > * {
   text-decoration: none;
