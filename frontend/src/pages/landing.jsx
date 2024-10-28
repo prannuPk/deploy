@@ -10,7 +10,7 @@ export default function LandingPage() {
       <div className="landingPageContainer">
         <nav>
           <div className="navHeader">
-            <h2>Link Up</h2>
+            <h2>LinkUp</h2>
           </div>
           <div className="navlist">
             <p
