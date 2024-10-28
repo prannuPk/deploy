@@ -47,7 +47,7 @@ export default function LandingPage() {
 
             <p>Cover a distance by LinkUp</p>
             <div role="button">
-              <Link to={"/auth"}>Get Started</Link>
+              <Link to={"/auth"}> <span>Get Started</span></Link>
             </div>
           </div>
           <div>
