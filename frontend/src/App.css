@@ -1,7 +1,7 @@
 .landingPageContainer {
   width: 100vw;
   height: 100vh;
-  background: url("/public/background5.jpg");
+  background: url("/public/BackPic.jpg");
   background-repeat: no-repeat;
   background-size: cover;
   color: white;
@@ -13,7 +13,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-
 }
 
 .landingPageContainer nav h2 {
@@ -25,7 +24,6 @@
   display: flex;
   gap: 1.6rem;
   cursor: pointer;
-
 }
 
 .landingMainContainer {
@@ -36,18 +34,11 @@
   align-items: center;
 }
 
-.landingMainContainer>div:nth-child(1) {
+.landingMainContainer > div:nth-child(1) {
   font-size: 2.2rem;
 }
-.landingMainContainer>div:nth-child(1) div[role='button'] {
-  background: #D97500;
-  width: fit-content;
-  padding: 1rem;
-  border-radius: 20px;
-  margin-top: 1.9rem;
-}
 
-.landingMainContainer > div:nth-child(1) div[role='button'] > * {
+.landingMainContainer > div:nth-child(1) div[role='button'] a {
   text-decoration: none;
   color: white;
   font-size: 1.8rem;
@@ -83,15 +74,14 @@
   width: auto;
 }
 
-
 .navBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding-inline: 20px;
   text-align: center;
-
 }
+
 .meetContainer {
   display: flex;
   padding-inline: 20px;
@@ -100,13 +90,10 @@
   justify-content: center;
 }
 
-
-
 .leftPanel {
   height: 100%;
   display: flex;
   align-items: center;
-
 }
 
 .rightPanel {
@@ -118,4 +105,47 @@
   width: 30vw;
   height: auto;
   border-radius: 20px;
+}
+
+
+@media (max-width: 768px) {
+  .landingPageContainer {
+    height: auto; 
+    padding: 0 1rem; 
+  }
+
+  .landingMainContainer {
+    flex-direction: column; 
+    padding-inline: 1rem; 
+    height: auto; 
+  }
+
+  .landingMainContainer > div:nth-child(1) {
+    font-size: 1.8rem; 
+    text-align: center; 
+  }
+
+  .landingMainContainer > div:nth-child(1) div[role='button'] a {
+    font-size: 1.4rem; 
+  }
+
+  .landingMainContainer > div:nth-child(2) img {
+    height: 50vh; 
+  }
+
+  .navBar {
+    flex-direction: column; 
+    padding: 1rem;
+  }
+
+  .meetContainer {
+    flex-direction: column; 
+    gap: 2rem; 
+    padding-inline: 0; 
+  }
+
+  .rightPanel > img {
+    width: 80vw; 
+    height: auto;
+  }
 }
