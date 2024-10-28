@@ -1,7 +1,7 @@
 .landingPageContainer {
   width: 100vw;
   height: 100vh;
-  background: url("/public/background.png");
+  background: url("/public/BackPic.jpg");
   background-repeat: no-repeat;
   background-size: cover;
   color: white;
@@ -40,19 +40,37 @@
   font-size: 2.2rem;
 }
 
-.landingMainContainer>div:nth-child(1) div[role='button'] {
-  background: #D97500;
-  width: fit-content;
-  padding: 1rem;
-  border-radius: 20px;
-  margin-top: 1.9rem;
-}
-
-.landingMainContainer>div:nth-child(1) div[role='button'] a {
+.landingMainContainer > div:nth-child(1) div[role='button'] a {
   text-decoration: none;
   color: white;
-  font-size: 1.7rem;
+  font-size: 1.8rem;
 }
+
+.landingMainContainer > div:nth-child(1) div[role='button'] span {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  transition: 0.5s;
+}
+
+.landingMainContainer > div:nth-child(1) div[role='button'] span:after {
+  content: '\00bb'; 
+  position: absolute;
+  opacity: 0;
+  top: 0;
+  right: -20px;
+  transition: 0.5s;
+}
+
+.landingMainContainer > div:nth-child(1) div[role='button']:hover span {
+  padding-right: 25px;
+}
+
+.landingMainContainer > div:nth-child(1) div[role='button']:hover span:after {
+  opacity: 1;
+  right: 0;
+}
+
 
 .landingMainContainer>div:nth-child(2) img {
   height: 70vh;
