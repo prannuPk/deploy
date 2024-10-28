@@ -51,7 +51,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div>
-            <img src="/videoCall.jpg" alt="" />
+            <img src="/mobile.png" alt="" />
           </div>
         </div>
       </div>
