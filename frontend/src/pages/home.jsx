@@ -76,6 +76,8 @@ function HomeComponent() {
       console.log("Create Meeting Response status:", response.status);
 
       if (response.ok) {
+        // After creating the meeting, store it in user history
+        await addToUserHistory(meetingCode);  // Call the function here
         alert("Meeting created successfully!");
         navigate(`/${meetingCode}`);
       } else {
