@@ -4,7 +4,7 @@ import server from "../environment";
 
 export const SocketContext = createContext();
 
-const socket = io(`${server}api/v1/socket`); // Adjust the endpoint as needed
+const socket = io(`${server}/api/v1/socket`); // Adjust the endpoint as needed
 
 export const SocketProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
