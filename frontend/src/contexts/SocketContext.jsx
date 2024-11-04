@@ -6,11 +6,7 @@ export const SocketContext = createContext();
 
 export const SocketProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
-  const socket = io(server, {
-    path: "/api/v1/socket.io", // Specify the socket path here
-    transports: ["websocket", "polling"],
-    secure: true,
-  });
+const socket = io(server);
 
   useEffect(() => {
     socket.on("connect", () => {
