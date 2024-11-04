@@ -90,29 +90,23 @@ const addToHistory = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     console.log("Storing hashed password for meeting:", hashedPassword);
 
-    // Create a new meeting record
+    // Create and save a new meeting record
     const newMeeting = new Meeting({
       user_id: user.username,
       meetingCode: meeting_code,
       password: hashedPassword,
     });
 
-    // Save the meeting to the database
-    const savedMeeting = await newMeeting.save();
-    if (savedMeeting) {
-      console.log("Meeting saved successfully:", savedMeeting);
-      return res.status(httpStatus.CREATED).json({ message: "Meeting created successfully" });
-    } else {
-      console.log("Failed to save the meeting");
-      return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Failed to create meeting" });
-    }
+    // Use Mongoose's built-in save method
+    await newMeeting.save();
+    console.log("Meeting saved successfully:", newMeeting);
+    return res.status(httpStatus.CREATED).json({ message: "Meeting created successfully" });
+
   } catch (e) {
     console.error("Error creating meeting:", e);
-    res.status(500).json({ message: `Error creating meeting: ${e.message}` }); // Use e.message for clarity
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Error creating meeting: ${e.message}` });
   }
 };
-
-
 
 // Validate meeting code and password for joining
 const joinMeeting = async (req, res) => {
@@ -136,10 +130,10 @@ const joinMeeting = async (req, res) => {
     }
 
     console.log("Password is correct, joining the meeting");
-    res.status(httpStatus.OK).json({ message: "Joined meeting successfully" });
+    return res.status(httpStatus.OK).json({ message: "Joined meeting successfully" });
   } catch (e) {
     console.error("Error joining meeting:", e);
-    res.status(500).json({ message: `Error joining meeting: ${e}` });
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Error joining meeting: ${e.message}` });
   }
 };
 
