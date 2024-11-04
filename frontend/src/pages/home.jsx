@@ -5,13 +5,13 @@ import "../App.css";
 import { Button, IconButton, TextField } from "@mui/material";
 import RestoreIcon from "@mui/icons-material/Restore";
 import { AuthContext } from "../contexts/AuthContext";
-import { useSocket } from "../contexts/SocketContext"; // For socket management
+import { useSocket } from "../contexts/SocketContext";
 
 function HomeComponent() {
   const navigate = useNavigate();
   const [meetingCode, setMeetingCode] = useState("");
   const { addToUserHistory } = useContext(AuthContext);
-  const socket = useSocket(); // Socket context for joining meetings
+  const socket = useSocket();
 
   const handleJoinVideoCall = async () => {
     if (!meetingCode) {
@@ -23,6 +23,10 @@ function HomeComponent() {
     const password = prompt("Please enter the meeting password:");
     if (!password) return; // Exit if no password is provided
 
+    // Log meeting code and password for debugging
+    console.log("Meeting Code:", meetingCode);
+    console.log("Password:", password);
+
     try {
       // Send meeting code and password for validation
       const response = await fetch("/api/join_meeting", {
@@ -33,9 +37,12 @@ function HomeComponent() {
         body: JSON.stringify({ meeting_code: meetingCode, password }),
       });
 
+      // Log the response status
+      console.log("Response status:", response.status);
+
       if (response.ok) {
         alert("Joined meeting successfully!");
-        navigate(`/${meetingCode}`); // Redirect to VideoMeet page
+        navigate(`/${meetingCode}`);
       } else if (response.status === 401) {
         alert("Incorrect password.");
       } else if (response.status === 404) {
@@ -51,7 +58,10 @@ function HomeComponent() {
 
   const handleCreateMeeting = async () => {
     const password = prompt("Please set a password for the meeting:");
-    if (!password) return; // If no password is set, return
+    if (!password) return;
+
+    console.log("Creating meeting with code:", meetingCode);
+    console.log("Meeting password:", password);
 
     try {
       const response = await fetch("/api/add_to_activity", {
@@ -62,6 +72,8 @@ function HomeComponent() {
         },
         body: JSON.stringify({ meeting_code: meetingCode, password }),
       });
+
+      console.log("Create Meeting Response status:", response.status);
 
       if (response.ok) {
         alert("Meeting created successfully!");
