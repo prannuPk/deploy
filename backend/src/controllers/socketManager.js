@@ -7,14 +7,17 @@ let messages = {};
 let timeOnline = {};
 
 export const connectToSocket = (server) => {
-  const io = new Server(server, {
-    cors: {
-      origin: "https://deploy-1-dxg9.onrender.com", // Replace with frontend URL
-      methods: ["GET", "POST"],
-      allowedHeaders: ["Content-Type", "Authorization"],
-      credentials: true,
-    },
-  });
+ const io = new Server(server, {
+  cors: {
+    origin: "https://deploy-1-dxg9.onrender.com", // Replace with your actual frontend URL
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  },
+  path: "/socket.io", // Ensure the path matches the frontend
+  transports: ["websocket", "polling"], // Allows both WebSocket and polling as a fallback
+});
+
 
   io.on("connection", (socket) => {
     console.log("Client connected:", socket.id);
