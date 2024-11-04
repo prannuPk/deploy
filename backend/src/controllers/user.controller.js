@@ -8,13 +8,13 @@ const login = async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    return res.status(400).json({ message: "Please Provide both username and password." });
+    return res.status(httpStatus.BAD_REQUEST).json({ message: "Please provide both username and password." });
   }
 
   try {
     const user = await User.findOne({ username });
     if (!user) {
-      return res.status(httpStatus.NOT_FOUND).json({ message: "User Not Found" });
+      return res.status(httpStatus.NOT_FOUND).json({ message: "User not found." });
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
@@ -25,10 +25,10 @@ const login = async (req, res) => {
       await user.save();
       return res.status(httpStatus.OK).json({ token });
     } else {
-      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid Username or password" });
+      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid username or password." });
     }
   } catch (e) {
-    return res.status(500).json({ message: `Something went wrong: ${e}` });
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Something went wrong: ${e.message}` });
   }
 };
 
@@ -38,7 +38,7 @@ const register = async (req, res) => {
   try {
     const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return res.status(httpStatus.FOUND).json({ message: "User already exists" });
+      return res.status(httpStatus.CONFLICT).json({ message: "User already exists." });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -51,9 +51,9 @@ const register = async (req, res) => {
 
     await newUser.save();
 
-    res.status(httpStatus.CREATED).json({ message: "User Registered" });
+    res.status(httpStatus.CREATED).json({ message: "User registered successfully." });
   } catch (e) {
-    res.status(500).json({ message: `Something went wrong: ${e}` });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Something went wrong: ${e.message}` });
   }
 };
 
@@ -63,13 +63,13 @@ const getUserHistory = async (req, res) => {
   try {
     const user = await User.findOne({ token });
     if (!user) {
-      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid token" });
+      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid token." });
     }
 
     const meetings = await Meeting.find({ user_id: user.username });
     res.status(httpStatus.OK).json(meetings);
   } catch (e) {
-    res.status(500).json({ message: `Something went wrong: ${e}` });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Something went wrong: ${e.message}` });
   }
 };
 
@@ -79,7 +79,7 @@ const addToHistory = async (req, res) => {
   try {
     const user = await User.findOne({ token });
     if (!user) {
-      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid token" });
+      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid token." });
     }
 
     const newMeeting = new Meeting({
@@ -90,31 +90,29 @@ const addToHistory = async (req, res) => {
 
     await newMeeting.save();
 
-    res.status(httpStatus.CREATED).json({ message: "Meeting created successfully" });
+    res.status(httpStatus.CREATED).json({ message: "Meeting created successfully." });
   } catch (e) {
-    res.status(500).json({ message: `Error creating meeting: ${e}` });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Error creating meeting: ${e.message}` });
   }
 };
 
-// Validate meeting code and password for joining
 const joinMeeting = async (req, res) => {
   const { meeting_code, password } = req.body;
 
   try {
     const meeting = await Meeting.findOne({ meetingCode: meeting_code });
     if (!meeting) {
-      return res.status(httpStatus.NOT_FOUND).json({ message: "Meeting not found" });
+      return res.status(httpStatus.NOT_FOUND).json({ message: "Meeting not found." });
     }
 
-    // Check password validity
     const isPasswordCorrect = await bcrypt.compare(password, meeting.password);
     if (!isPasswordCorrect) {
-      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid meeting code or password" });
+      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid meeting code or password." });
     }
 
-    res.status(httpStatus.OK).json({ message: "Joined meeting successfully" });
+    res.status(httpStatus.OK).json({ message: "Joined meeting successfully." });
   } catch (e) {
-    res.status(500).json({ message: `Error joining meeting: ${e}` });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Error joining meeting: ${e.message}` });
   }
 };
 
