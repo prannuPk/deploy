@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import io from "socket.io-client";
-import { useSocket } from "../contexts/SocketContext";
+
 import { Badge, IconButton, TextField } from '@mui/material';
 import { Button } from '@mui/material';
 import VideocamIcon from '@mui/icons-material/Videocam';
@@ -25,7 +25,7 @@ const peerConfigConnections = {
 }
 
 export default function VideoMeetComponent() {
-  const socket = useSocket();
+  var socketRef = useRef();
   let socketIdRef = useRef();
 
   let localVideoref = useRef();
@@ -162,7 +162,7 @@ export default function VideoMeetComponent() {
         connections[id]
           .setLocalDescription(description)
           .then(() => {
-            socket.emit(
+            socketRef.current.emit(
               "signal",
               id,
               JSON.stringify({ sdp: connections[id].localDescription })
@@ -197,7 +197,7 @@ export default function VideoMeetComponent() {
               connections[id]
                 .setLocalDescription(description)
                 .then(() => {
-                  socket.emit(
+                  socketRef.current.emit(
                     "signal",
                     id,
                     JSON.stringify({ sdp: connections[id].localDescription })
@@ -245,7 +245,7 @@ export default function VideoMeetComponent() {
         connections[id]
           .setLocalDescription(description)
           .then(() => {
-            socket.emit(
+            socketRef.current.emit(
               "signal",
               id,
               JSON.stringify({ sdp: connections[id].localDescription })
@@ -292,7 +292,7 @@ export default function VideoMeetComponent() {
                   connections[fromId]
                     .setLocalDescription(description)
                     .then(() => {
-                      socket.emit(
+                      socketRef.current.emit(
                         "signal",
                         fromId,
                         JSON.stringify({
@@ -317,21 +317,21 @@ export default function VideoMeetComponent() {
   };
 
   let connectToSocketServer = () => {
-    socket = io.connect(server_url, { secure: false });
+    socketRef.current = io.connect(server_url, { secure: false });
 
-    socket.on("signal", gotMessageFromServer);
+    socketRef.current.on("signal", gotMessageFromServer);
 
-    socket.on("connect", () => {
-      socket.emit("join-call", window.location.href);
-      socketIdRef.current = socket.id;
+    socketRef.current.on("connect", () => {
+      socketRef.current.emit("join-call", window.location.href);
+      socketIdRef.current = socketRef.current.id;
 
-      socket.on("chat-message", addMessage);
+      socketRef.current.on("chat-message", addMessage);
 
-      socket.on("user-left", (id) => {
+      socketRef.current.on("user-left", (id) => {
         setVideos((videos) => videos.filter((video) => video.socketId !== id));
       });
 
-      socket.on("user-joined", (id, clients) => {
+      socketRef.current.on("user-joined", (id, clients) => {
         clients.forEach((socketListId) => {
           connections[socketListId] = new RTCPeerConnection(
             peerConfigConnections
@@ -339,7 +339,7 @@ export default function VideoMeetComponent() {
           // Wait for their ice candidate
           connections[socketListId].onicecandidate = function (event) {
             if (event.candidate != null) {
-              socket.emit(
+              socketRef.current.emit(
                 "signal",
                 socketListId,
                 JSON.stringify({ ice: event.candidate })
@@ -410,7 +410,7 @@ export default function VideoMeetComponent() {
               connections[id2]
                 .setLocalDescription(description)
                 .then(() => {
-                  socket.emit(
+                  socketRef.current.emit(
                     "signal",
                     id2,
                     JSON.stringify({ sdp: connections[id2].localDescription })
@@ -507,8 +507,8 @@ export default function VideoMeetComponent() {
 
 
   let sendMessage = () => {
-    console.log(socket);
-    socket.emit("chat-message", message, username);
+    console.log(socketRef.current);
+    socketRef.current.emit("chat-message", message, username);
     setMessage("");
 
     // this.setState({ message: "", sender: username })
