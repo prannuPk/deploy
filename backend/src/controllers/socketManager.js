@@ -1,5 +1,6 @@
 import { Server } from "socket.io";
-import { Meeting } from "../models/meeting.model.js"; // Import Meeting model
+import bcrypt from "bcrypt"; // Ensure bcrypt is imported
+import { Meeting } from "../models/meeting.model.js";
 
 let connections = {};
 let messages = {};
@@ -8,17 +9,17 @@ let timeOnline = {};
 export const connectToSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: "*",
+      origin: "https://deploy-1-dxg9.onrender.com", // Replace with frontend URL
       methods: ["GET", "POST"],
-      allowedHeaders: ["*"],
+      allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
     },
   });
 
   io.on("connection", (socket) => {
-    console.log("SOMETHING CONNECTED");
+    console.log("Client connected:", socket.id);
 
-    // New event for joining a meeting with validation
+    // Event for joining a meeting with password validation
     socket.on("join-meeting", async ({ meetingCode, password }) => {
       try {
         const meeting = await Meeting.findOne({ meetingCode });
@@ -26,102 +27,76 @@ export const connectToSocket = (server) => {
           return socket.emit("join-failed", "Meeting not found");
         }
 
-        const isPasswordCorrect = await bcrypt.compare(
-          password,
-          meeting.password
-        );
+        const isPasswordCorrect = await bcrypt.compare(password, meeting.password);
         if (!isPasswordCorrect) {
           return socket.emit("join-failed", "Invalid password");
         }
 
-        // Proceed to join the meeting if password is valid
-        if (connections[meetingCode] === undefined) {
+        // Add user to the meeting if password is valid
+        if (!connections[meetingCode]) {
           connections[meetingCode] = [];
         }
         connections[meetingCode].push(socket.id);
-
         timeOnline[socket.id] = new Date();
 
-        for (let a = 0; a < connections[meetingCode].length; a++) {
-          io.to(connections[meetingCode][a]).emit(
-            "user-joined",
-            socket.id,
-            connections[meetingCode]
-          );
-        }
+        // Notify other users in the meeting about the new connection
+        connections[meetingCode].forEach((connId) => {
+          io.to(connId).emit("user-joined", socket.id, connections[meetingCode]);
+        });
 
-        if (messages[meetingCode] !== undefined) {
-          for (let a = 0; a < messages[meetingCode].length; ++a) {
-            io.to(socket.id).emit(
-              "chat-message",
-              messages[meetingCode][a]["data"],
-              messages[meetingCode][a]["sender"],
-              messages[meetingCode][a]["socket-id-sender"]
-            );
-          }
+        // Send existing messages to the new participant
+        if (messages[meetingCode]) {
+          messages[meetingCode].forEach((msg) => {
+            io.to(socket.id).emit("chat-message", msg.data, msg.sender, msg["socket-id-sender"]);
+          });
         }
       } catch (error) {
-        console.error(error);
+        console.error("Error during join-meeting:", error);
         socket.emit("join-failed", "Error joining meeting");
       }
     });
 
+    // Handle signaling for WebRTC
     socket.on("signal", (toId, message) => {
       io.to(toId).emit("signal", socket.id, message);
     });
 
+    // Handle chat messages
     socket.on("chat-message", (data, sender) => {
-      const [matchingRoom, found] = Object.entries(connections).reduce(
-        ([room, isFound], [roomKey, roomValue]) => {
-          if (!isFound && roomValue.includes(socket.id)) {
-            return [roomKey, true];
-          }
-          return [room, isFound];
-        },
-        ["", false]
-      );
+      const room = Object.keys(connections).find((key) => connections[key].includes(socket.id));
 
-      if (found === true) {
-        if (messages[matchingRoom] === undefined) {
-          messages[matchingRoom] = [];
+      if (room) {
+        if (!messages[room]) {
+          messages[room] = [];
         }
-
-        messages[matchingRoom].push({
-          sender: sender,
-          data: data,
+        messages[room].push({
+          sender,
+          data,
           "socket-id-sender": socket.id,
         });
-        console.log("message", matchingRoom, ":", sender, data);
 
-        connections[matchingRoom].forEach((elem) => {
-          io.to(elem).emit("chat-message", data, sender, socket.id);
+        connections[room].forEach((connId) => {
+          io.to(connId).emit("chat-message", data, sender, socket.id);
         });
       }
     });
 
+    // Handle disconnections
     socket.on("disconnect", () => {
-      var diffTime = Math.abs(timeOnline[socket.id] - new Date());
-      var key;
+      const disconnectedTime = Math.abs(timeOnline[socket.id] - new Date());
+      for (const [room, connIds] of Object.entries(connections)) {
+        if (connIds.includes(socket.id)) {
+          connIds.forEach((connId) => io.to(connId).emit("user-left", socket.id));
 
-      for (const [k, v] of JSON.parse(
-        JSON.stringify(Object.entries(connections))
-      )) {
-        for (let a = 0; a < v.length; ++a) {
-          if (v[a] === socket.id) {
-            key = k;
-            for (let a = 0; a < connections[key].length; ++a) {
-              io.to(connections[key][a]).emit("user-left", socket.id);
-            }
-
-            var index = connections[key].indexOf(socket.id);
-            connections[key].splice(index, 1);
-
-            if (connections[key].length === 0) {
-              delete connections[key];
-            }
+          // Remove user from room
+          connections[room] = connIds.filter((id) => id !== socket.id);
+          if (connections[room].length === 0) {
+            delete connections[room];
           }
+          break;
         }
       }
+      delete timeOnline[socket.id];
     });
   });
 
