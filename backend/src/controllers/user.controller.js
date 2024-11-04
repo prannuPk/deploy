@@ -73,8 +73,12 @@ const getUserHistory = async (req, res) => {
   }
 };
 
+import bcrypt from 'bcrypt'; // Ensure bcrypt is imported
+
 const addToHistory = async (req, res) => {
   const { token, meeting_code, password } = req.body;
+
+  console.log("Request body:", req.body); // Log the request body
 
   try {
     // Find the user associated with the provided token
@@ -106,9 +110,10 @@ const addToHistory = async (req, res) => {
     }
   } catch (e) {
     console.error("Error creating meeting:", e);
-    res.status(500).json({ message: `Error creating meeting: ${e}` });
+    res.status(500).json({ message: `Error creating meeting: ${e.message}` }); // Use e.message for clarity
   }
 };
+
 
 
 // Validate meeting code and password for joining
