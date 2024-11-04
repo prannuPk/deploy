@@ -1,6 +1,6 @@
 let IS_PROD = true;
 const server = IS_PROD
-  ? "https://deploy1-wzle.onrender.com/"
+  ? "https://deploy-w9cr.onrender.com"
   : "http://localhost:8000";
 
 
