@@ -90,6 +90,7 @@ function HomeComponent() {
     }
 };
 
+
   return (
     <>
       <div className="navBar">
