@@ -82,10 +82,11 @@ const addToHistory = async (req, res) => {
       return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid token." });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10); // Ensure the password is hashed
     const newMeeting = new Meeting({
       user_id: user.username,
       meetingCode: meeting_code,
-      password: await bcrypt.hash(password, 10), // Hash password before saving
+      password: hashedPassword, // Save the hashed password
     });
 
     await newMeeting.save();
@@ -105,6 +106,7 @@ const joinMeeting = async (req, res) => {
       return res.status(httpStatus.NOT_FOUND).json({ message: "Meeting not found." });
     }
 
+    // Compare the entered password with the hashed password in the database
     const isPasswordCorrect = await bcrypt.compare(password, meeting.password);
     if (!isPasswordCorrect) {
       return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid meeting code or password." });
