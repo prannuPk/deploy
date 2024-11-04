@@ -9,7 +9,7 @@ export const AuthContext = createContext({});
 
 // Create an Axios client with the base URL
 const client = axios.create({
-  baseURL: `${server}api/v1/users/`, // Added trailing slash here
+  baseURL: `${server}/api/v1/users/`, // Added trailing slash here
 });
 
 export const AuthProvider = ({ children }) => {
