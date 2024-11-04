@@ -73,8 +73,6 @@ const getUserHistory = async (req, res) => {
   }
 };
 
-import bcrypt from 'bcrypt'; // Ensure bcrypt is imported
-
 const addToHistory = async (req, res) => {
   const { token, meeting_code, password } = req.body;
 
