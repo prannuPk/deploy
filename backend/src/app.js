@@ -13,7 +13,7 @@ const io = connectToSocket(server);
 app.set("port", process.env.PORT || 8000);
 
 const corsOptions = {
-   origin: 'https://deploy1-1-al14.onrender.com', 
+   origin: 'https://deploy-1-dxg9.onrender.com', 
    methods: 'GET, POST, PUT, DELETE',
    allowedHeaders: 'Content-Type, Authorization',
    credentials: true
