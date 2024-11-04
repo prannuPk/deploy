@@ -3,6 +3,7 @@ import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import LandingPage from "./pages/landing";
 import Authentication from "./pages/authentication";
 import { AuthProvider } from "./contexts/AuthContext";
+import { SocketProvider } from "./contexts/SocketContext"; // Import the SocketProvider
 import VideoMeetComponent from "./pages/VideoMeet";
 import HomeComponent from "./pages/home";
 import History from "./pages/history";
@@ -17,15 +18,19 @@ function App() {
     <div className="App">
       <Router>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/auth" element={<Authentication />} />
-            <Route path="/home" element={<HomeComponent />} />
-            <Route path="/history" element={<AuthHistory />} />{" "}
-            {/* Protect the History route */}
-            <Route path="/:url" element={<AuthVideoMeetComponent />} />{" "}
-            {/* Protect the VideoMeet route */}
-          </Routes>
+          <SocketProvider>
+            {" "}
+            {/* Wrap with SocketProvider */}
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/auth" element={<Authentication />} />
+              <Route path="/home" element={<HomeComponent />} />
+              <Route path="/history" element={<AuthHistory />} />{" "}
+              {/* Protect the History route */}
+              <Route path="/:url" element={<AuthVideoMeetComponent />} />{" "}
+              {/* Protect the VideoMeet route */}
+            </Routes>
+          </SocketProvider>
         </AuthProvider>
       </Router>
     </div>
