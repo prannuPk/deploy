@@ -91,6 +91,8 @@ const addToHistory = async (req, res) => {
 
     await newMeeting.save();
 
+    console.log("Meeting created:", newMeeting); // Log the meeting to verify
+
     res.status(httpStatus.CREATED).json({ message: "Meeting created successfully." });
   } catch (e) {
     res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Error creating meeting: ${e.message}` });
@@ -103,11 +105,17 @@ const joinMeeting = async (req, res) => {
   try {
     const meeting = await Meeting.findOne({ meetingCode: meeting_code });
     if (!meeting) {
+      console.log("Meeting not found for code:", meeting_code);
       return res.status(httpStatus.NOT_FOUND).json({ message: "Meeting not found." });
     }
 
+    // Log the actual hashed password to confirm it's stored correctly
+    console.log("Stored hashed password for meeting:", meeting.password);
+
     // Compare the entered password with the hashed password in the database
     const isPasswordCorrect = await bcrypt.compare(password, meeting.password);
+    console.log("Password comparison result:", isPasswordCorrect); // Log the comparison result
+
     if (!isPasswordCorrect) {
       return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid meeting code or password." });
     }
