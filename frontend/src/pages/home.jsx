@@ -5,48 +5,73 @@ import "../App.css";
 import { Button, IconButton, TextField } from "@mui/material";
 import RestoreIcon from "@mui/icons-material/Restore";
 import { AuthContext } from "../contexts/AuthContext";
-import { useSocket } from "../contexts/SocketContext"; // Make sure to create this context for socket management
+import { useSocket } from "../contexts/SocketContext"; // For socket management
 
 function HomeComponent() {
-  let navigate = useNavigate();
+  const navigate = useNavigate();
   const [meetingCode, setMeetingCode] = useState("");
-  const [password, setPassword] = useState("");
   const { addToUserHistory } = useContext(AuthContext);
-  const socket = useSocket(); // Use the socket context to manage socket connections
+  const socket = useSocket(); // Socket context for joining meetings
 
   const handleJoinVideoCall = async () => {
-    // Emit the join-meeting event to the server
-    socket.emit("join-meeting", { meetingCode, password });
+    if (!meetingCode) {
+      alert("Please enter a meeting code.");
+      return;
+    }
 
-    socket.on("join-failed", (message) => {
-      alert(message); // Handle join failure
-    });
+    // Prompt for the meeting password
+    const password = prompt("Please enter the meeting password:");
+    if (!password) return; // Exit if no password is provided
 
-    socket.on("user-joined", (userId, connections) => {
-      // Handle successful join, navigate to video call page
-      navigate(`/${meetingCode}`);
-    });
+    try {
+      // Send meeting code and password for validation
+      const response = await fetch("/api/join_meeting", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ meeting_code: meetingCode, password }),
+      });
+
+      if (response.ok) {
+        alert("Joined meeting successfully!");
+        navigate(`/${meetingCode}`); // Redirect to VideoMeet page
+      } else if (response.status === 401) {
+        alert("Incorrect password.");
+      } else if (response.status === 404) {
+        alert("Meeting not found.");
+      } else {
+        alert("An error occurred. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error joining meeting:", error);
+      alert("Unable to join the meeting at this time.");
+    }
   };
 
   const handleCreateMeeting = async () => {
-    const meetingPassword = prompt("Please set a password for the meeting:");
-    if (!meetingPassword) return; // If no password is set, return
+    const password = prompt("Please set a password for the meeting:");
+    if (!password) return; // If no password is set, return
 
-    // Save the meeting with the password to the database (you need to create this endpoint)
-    const response = await fetch("/api/meetings/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`, // Pass the token if needed
-      },
-      body: JSON.stringify({ meetingCode, password: meetingPassword }),
-    });
+    try {
+      const response = await fetch("/api/add_to_activity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ meeting_code: meetingCode, password }),
+      });
 
-    if (response.ok) {
-      alert("Meeting created successfully!");
-      navigate(`/${meetingCode}`);
-    } else {
-      alert("Error creating meeting.");
+      if (response.ok) {
+        alert("Meeting created successfully!");
+        navigate(`/${meetingCode}`);
+      } else {
+        alert("Error creating meeting.");
+      }
+    } catch (error) {
+      console.error("Error creating meeting:", error);
+      alert("Unable to create the meeting at this time.");
     }
   };
 
@@ -79,15 +104,7 @@ function HomeComponent() {
             <div style={{ display: "flex", gap: "10px" }}>
               <TextField
                 onChange={(e) => setMeetingCode(e.target.value)}
-                id="outlined-basic"
                 label="Meeting Code"
-                variant="outlined"
-              />
-              <TextField
-                onChange={(e) => setPassword(e.target.value)}
-                type="password"
-                id="outlined-password"
-                label="Password"
                 variant="outlined"
               />
               <Button onClick={handleJoinVideoCall} variant="contained">
