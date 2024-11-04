@@ -56,7 +56,7 @@ function HomeComponent() {
     }
   };
 
-  const handleCreateMeeting = async () => {
+ const handleCreateMeeting = async () => {
     const password = prompt("Please set a password for the meeting:");
     if (!password) return;
 
@@ -64,30 +64,31 @@ function HomeComponent() {
     console.log("Meeting password:", password);
 
     try {
-      const response = await fetch("/api/add_to_activity", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ meeting_code: meetingCode, password }),
-      });
+        // Step 1: Create the meeting
+        const response = await fetch("/api/add_to_activity", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`, // Ensure the token is sent in the headers
+            },
+            body: JSON.stringify({ meeting_code: meetingCode, password }),
+        });
 
-      console.log("Create Meeting Response status:", response.status);
+        console.log("Create Meeting Response status:", response.status);
 
-      if (response.ok) {
-        // After creating the meeting, store it in user history
-        await addToUserHistory(meetingCode);  // Call the function here
-        alert("Meeting created successfully!");
-        navigate(`/${meetingCode}`);
-      } else {
-        alert("Error creating meeting.");
-      }
+        if (response.ok) {
+            // Step 2: After creating the meeting, log it in user history
+            await addToUserHistory(meetingCode, password);  // Call the function here to log the activity
+            alert("Meeting created successfully!");
+            navigate(`/${meetingCode}`);
+        } else {
+            alert("Error creating meeting.");
+        }
     } catch (error) {
-      console.error("Error creating meeting:", error);
-      alert("Unable to create the meeting at this time.");
+        console.error("Error creating meeting:", error);
+        alert("Unable to create the meeting at this time.");
     }
-  };
+};
 
   return (
     <>
