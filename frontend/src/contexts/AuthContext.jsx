@@ -69,19 +69,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const addToUserHistory = async (meetingCode, password) => {
+ const addToUserHistory = async (meetingCode, password) => {
     try {
-      const request = await client.post("/add_to_activity", {
-        token: localStorage.getItem("token"),
-        meeting_code: meetingCode,
-        password: password, // Include password if needed
-      });
-      return request.data; // Return the response data for further handling
+        const request = await client.post("/add_to_activity", {
+            token: localStorage.getItem("token"), // Ensure the token is included
+            meeting_code: meetingCode,
+            password: password, // Include password if needed
+        });
+        return request.data; // Return the response data for further handling
     } catch (e) {
-      console.error("Error adding to user history:", e.response?.data || e.message);
-      throw e;
+        console.error("Error adding to user history:", e);
+        throw e;
     }
-  };
+};
+
 
   const data = {
     userData,
