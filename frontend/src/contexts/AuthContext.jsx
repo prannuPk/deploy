@@ -16,6 +16,9 @@ export const AuthProvider = ({ children }) => {
   const [userData, setUserData] = useState(null); // Initialize userData to null
   const router = useNavigate();
 
+  // Log the server URL to ensure it's correct
+  console.log("Server URL:", server);
+
   const handleRegister = async (name, username, password) => {
     try {
       const request = await client.post("/register", {
@@ -75,7 +78,7 @@ export const AuthProvider = ({ children }) => {
       });
       return request.data; // Return the response data for further handling
     } catch (e) {
-      console.error("Error adding to user history:", e);
+      console.error("Error adding to user history:", e.response?.data || e.message);
       throw e;
     }
   };
