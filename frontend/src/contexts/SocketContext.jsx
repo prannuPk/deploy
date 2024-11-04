@@ -4,18 +4,29 @@ import server from "../environment";
 
 export const SocketContext = createContext();
 
-const socket = io(`${server}/api/v1/socket`); // Adjust the endpoint as needed
-
 export const SocketProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
+  const socket = io(server, {
+    path: "/api/v1/socket.io", // Specify the socket path here
+    transports: ["websocket", "polling"],
+    secure: true,
+  });
 
   useEffect(() => {
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket");
+    });
+
     socket.on("message", (message) => {
       setMessages((prevMessages) => [...prevMessages, message]);
     });
 
+    socket.on("disconnect", () => {
+      console.log("Disconnected from WebSocket");
+    });
+
     return () => {
-      socket.off("message");
+      socket.disconnect();
     };
   }, []);
 
