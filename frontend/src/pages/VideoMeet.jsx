@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
 import io from "socket.io-client";
-
 import { Badge, IconButton, TextField } from '@mui/material';
 import { Button } from '@mui/material';
 import VideocamIcon from '@mui/icons-material/Videocam';
@@ -34,7 +33,7 @@ export default function VideoMeetComponent() {
   let [isPasswordValid, setIsPasswordValid] = useState(true); // Initially valid
 
   let [videoAvailable, setVideoAvailable] = useState(true);
- let [meetingCode, setMeetingCode] = useState("");
+
   let [audioAvailable, setAudioAvailable] = useState(true);
 
   let [video, setVideo] = useState([]);
@@ -490,7 +489,7 @@ export default function VideoMeetComponent() {
   };
   const validatePassword = async (meetingCode, password) => {
     try {
-      const response = await fetch(`${server_url}/api/meetings/validate`, {
+      const response = await fetch(${server_url}/api/meetings/validate, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
