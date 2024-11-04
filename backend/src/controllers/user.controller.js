@@ -8,13 +8,13 @@ const login = async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    return res.status(httpStatus.BAD_REQUEST).json({ message: "Please provide both username and password." });
+    return res.status(400).json({ message: "Please provide both username and password." });
   }
 
   try {
     const user = await User.findOne({ username });
     if (!user) {
-      return res.status(httpStatus.NOT_FOUND).json({ message: "User not found." });
+      return res.status(httpStatus.NOT_FOUND).json({ message: "User not found" });
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
@@ -25,10 +25,10 @@ const login = async (req, res) => {
       await user.save();
       return res.status(httpStatus.OK).json({ token });
     } else {
-      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid username or password." });
+      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid username or password" });
     }
   } catch (e) {
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Something went wrong: ${e.message}` });
+    return res.status(500).json({ message: `Something went wrong: ${e}` });
   }
 };
 
@@ -38,7 +38,7 @@ const register = async (req, res) => {
   try {
     const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return res.status(httpStatus.CONFLICT).json({ message: "User already exists." });
+      return res.status(httpStatus.FOUND).json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -51,9 +51,9 @@ const register = async (req, res) => {
 
     await newUser.save();
 
-    res.status(httpStatus.CREATED).json({ message: "User registered successfully." });
+    res.status(httpStatus.CREATED).json({ message: "User registered" });
   } catch (e) {
-    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Something went wrong: ${e.message}` });
+    res.status(500).json({ message: `Something went wrong: ${e}` });
   }
 };
 
@@ -63,13 +63,13 @@ const getUserHistory = async (req, res) => {
   try {
     const user = await User.findOne({ token });
     if (!user) {
-      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid token." });
+      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid token" });
     }
 
     const meetings = await Meeting.find({ user_id: user.username });
     res.status(httpStatus.OK).json(meetings);
   } catch (e) {
-    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Something went wrong: ${e.message}` });
+    res.status(500).json({ message: `Something went wrong: ${e}` });
   }
 };
 
@@ -79,50 +79,51 @@ const addToHistory = async (req, res) => {
   try {
     const user = await User.findOne({ token });
     if (!user) {
-      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid token." });
+      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid token" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10); // Ensure the password is hashed
+    const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
+    console.log("Storing hashed password:", hashedPassword); // Log the hashed password
+
     const newMeeting = new Meeting({
       user_id: user.username,
       meetingCode: meeting_code,
-      password: hashedPassword, // Save the hashed password
+      password: hashedPassword,
     });
 
     await newMeeting.save();
-
-    console.log("Meeting created:", newMeeting); // Log the meeting to verify
-
-    res.status(httpStatus.CREATED).json({ message: "Meeting created successfully." });
+    res.status(httpStatus.CREATED).json({ message: "Meeting created successfully" });
   } catch (e) {
-    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Error creating meeting: ${e.message}` });
+    res.status(500).json({ message: `Error creating meeting: ${e}` });
   }
 };
 
+// Validate meeting code and password for joining
 const joinMeeting = async (req, res) => {
   const { meeting_code, password } = req.body;
 
   try {
     const meeting = await Meeting.findOne({ meetingCode: meeting_code });
     if (!meeting) {
-      console.log("Meeting not found for code:", meeting_code);
-      return res.status(httpStatus.NOT_FOUND).json({ message: "Meeting not found." });
+      return res.status(httpStatus.NOT_FOUND).json({ message: "Meeting not found" });
     }
 
-    // Log the actual hashed password to confirm it's stored correctly
-    console.log("Stored hashed password for meeting:", meeting.password);
+    // Log the stored and input passwords for debugging
+    console.log("Stored hashed password:", meeting.password);
+    console.log("Password provided:", password);
 
-    // Compare the entered password with the hashed password in the database
+    // Check password validity
     const isPasswordCorrect = await bcrypt.compare(password, meeting.password);
-    console.log("Password comparison result:", isPasswordCorrect); // Log the comparison result
-
     if (!isPasswordCorrect) {
-      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid meeting code or password." });
+      console.log("Password is incorrect");
+      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid meeting code or password" });
     }
 
-    res.status(httpStatus.OK).json({ message: "Joined meeting successfully." });
+    console.log("Password is correct, joining the meeting");
+    res.status(httpStatus.OK).json({ message: "Joined meeting successfully" });
   } catch (e) {
-    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Error joining meeting: ${e.message}` });
+    console.error("Error joining meeting:", e);
+    res.status(500).json({ message: `Error joining meeting: ${e}` });
   }
 };
 
