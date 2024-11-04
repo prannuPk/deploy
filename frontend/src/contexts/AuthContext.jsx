@@ -4,10 +4,12 @@ import { createContext, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import server from "../environment";
 
+// Create the AuthContext
 export const AuthContext = createContext({});
 
+// Create an Axios client with the base URL
 const client = axios.create({
-  baseURL: `${server}api/v1/users`,
+  baseURL: `${server}api/v1/users/`, // Added trailing slash here
 });
 
 export const AuthProvider = ({ children }) => {
@@ -23,10 +25,10 @@ export const AuthProvider = ({ children }) => {
     meetingPassword
   ) => {
     try {
-      let request = await client.post("/register", {
-        name: name,
-        username: username,
-        password: password,
+      const request = await client.post("/register", {
+        name,
+        username,
+        password,
         meeting_code: meetingCode, // Added meeting code
         meeting_password: meetingPassword, // Added meeting password
       });
@@ -35,15 +37,16 @@ export const AuthProvider = ({ children }) => {
         return request.data.message;
       }
     } catch (err) {
+      console.error("Registration error:", err); // Improved error logging
       throw err;
     }
   };
 
   const handleLogin = async (username, password) => {
     try {
-      let request = await client.post("/login", {
-        username: username,
-        password: password,
+      const request = await client.post("/login", {
+        username,
+        password,
       });
 
       console.log(username, password);
@@ -54,31 +57,34 @@ export const AuthProvider = ({ children }) => {
         router("/home");
       }
     } catch (err) {
+      console.error("Login error:", err); // Improved error logging
       throw err;
     }
   };
 
   const getHistoryOfUser = async () => {
     try {
-      let request = await client.get("/get_all_activity", {
+      const request = await client.get("/get_all_activity", {
         params: {
           token: localStorage.getItem("token"),
         },
       });
       return request.data;
     } catch (err) {
+      console.error("Error fetching user history:", err); // Improved error logging
       throw err;
     }
   };
 
   const addToUserHistory = async (meetingCode) => {
     try {
-      let request = await client.post("/add_to_activity", {
+      const request = await client.post("/add_to_activity", {
         token: localStorage.getItem("token"),
         meeting_code: meetingCode,
       });
       return request;
     } catch (e) {
+      console.error("Error adding to user history:", e); // Improved error logging
       throw e;
     }
   };
