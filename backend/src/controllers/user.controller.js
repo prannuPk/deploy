@@ -77,26 +77,39 @@ const addToHistory = async (req, res) => {
   const { token, meeting_code, password } = req.body;
 
   try {
+    // Find the user associated with the provided token
     const user = await User.findOne({ token });
     if (!user) {
+      console.log("User not found or invalid token");
       return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid token" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
-    console.log("Storing hashed password:", hashedPassword); // Log the hashed password
+    // Hash the meeting password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    console.log("Storing hashed password for meeting:", hashedPassword);
 
+    // Create a new meeting record
     const newMeeting = new Meeting({
       user_id: user.username,
       meetingCode: meeting_code,
       password: hashedPassword,
     });
 
-    await newMeeting.save();
-    res.status(httpStatus.CREATED).json({ message: "Meeting created successfully" });
+    // Save the meeting to the database
+    const savedMeeting = await newMeeting.save();
+    if (savedMeeting) {
+      console.log("Meeting saved successfully:", savedMeeting);
+      return res.status(httpStatus.CREATED).json({ message: "Meeting created successfully" });
+    } else {
+      console.log("Failed to save the meeting");
+      return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Failed to create meeting" });
+    }
   } catch (e) {
+    console.error("Error creating meeting:", e);
     res.status(500).json({ message: `Error creating meeting: ${e}` });
   }
 };
+
 
 // Validate meeting code and password for joining
 const joinMeeting = async (req, res) => {
