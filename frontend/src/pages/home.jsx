@@ -22,30 +22,26 @@ function HomeComponent() {
     const password = prompt("Please enter the meeting password:");
     if (!password) return;
 
-    console.log("Meeting Code:", meetingCode);
-    console.log("Password:", password);
-
     try {
-        // Adjust the key from 'meeting_code' to 'meetingCode'
         const response = await fetch("/api/join_meeting", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ meetingCode, password }), // Use the same key as in the backend
+            body: JSON.stringify({ meeting_code: meetingCode, password }),
         });
 
+        // Check and log the response
         console.log("Response status:", response.status);
+        
+        const data = await response.json(); // Parse the response JSON
+        console.log("Response data:", data); // Log the response data for debugging
 
         if (response.ok) {
-            alert("Joined meeting successfully!");
+            alert(data.message || "Joined meeting successfully!");
             navigate(`/${meetingCode}`);
-        } else if (response.status === 401) {
-            alert("Incorrect password.");
-        } else if (response.status === 404) {
-            alert("Meeting not found.");
         } else {
-            alert("An error occurred. Please try again.");
+            alert(data.message || "An error occurred. Please try again.");
         }
     } catch (error) {
         console.error("Error joining meeting:", error);
