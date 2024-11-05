@@ -14,45 +14,48 @@ function HomeComponent() {
     const { addToUserHistory } = useContext(AuthContext);
     const socket = useSocket();
 
-    const handleJoinVideoCall = async () => {
-        if (!meetingCode) {
-            alert("Please enter a meeting code.");
+   const handleJoinVideoCall = async () => {
+    if (!meetingCode) {
+        alert("Please enter a meeting code.");
+        return;
+    }
+
+    const password = prompt("Please enter the meeting password:");
+    if (!password) return;
+
+    try {
+        const response = await fetch("https://deploy-w9cr.onrender.com/api/v1/meetings/join_meeting", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ meetingCode, password }),
+        });
+
+        const text = await response.text(); // Read response as text
+
+        let data;
+        try {
+            data = JSON.parse(text); // Attempt to parse as JSON
+        } catch (parseError) {
+            console.error("Failed to parse JSON:", parseError);
+            console.log("Response text:", text);
+            alert("Failed to parse response from server. Please try again.");
             return;
         }
 
-        const password = prompt("Please enter the meeting password:");
-        if (!password) return;
-
-        console.log("Meeting Code:", meetingCode);
-        console.log("Password:", password);
-
-        try {
-            const response = await fetch("/api/v1/meetings/join_meeting", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${localStorage.getItem("token")}`, // Include the token
-                },
-                body: JSON.stringify({ meetingCode, password }),
-            });
-
-            console.log("Response status:", response.status);
-
-            if (response.ok) {
-                alert("Joined meeting successfully!");
-                navigate(`/${meetingCode}`);
-            } else if (response.status === 401) {
-                alert("Incorrect password.");
-            } else if (response.status === 404) {
-                alert("Meeting not found.");
-            } else {
-                alert("An error occurred. Please try again.");
-            }
-        } catch (error) {
-            console.error("Error joining meeting:", error);
-            alert("Unable to join the meeting at this time.");
+        if (data) {
+            alert(data.message || "Joined meeting successfully!");
+            navigate(`/${meetingCode}`);
+        } else {
+            alert("An error occurred. Please try again.");
         }
-    };
+    } catch (error) {
+        console.error("Error joining meeting:", error);
+        alert("Unable to join the meeting at this time. Please check the network or try again later.");
+    }
+};
+
 
     const handleCreateMeeting = async () => {
         const password = prompt("Please set a password for the meeting:");
