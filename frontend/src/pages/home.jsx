@@ -23,11 +23,15 @@ function HomeComponent() {
     const password = prompt("Please enter the meeting password:");
     if (!password) return;
 
+    console.log("Meeting Code:", meetingCode);
+    console.log("Password:", password);
+
     try {
         const response = await fetch("/api/v1/meetings/join_meeting", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("token")}`, // Include the token
             },
             body: JSON.stringify({ meetingCode, password }),
         });
@@ -40,19 +44,17 @@ function HomeComponent() {
             return;
         }
 
-        const text = await response.text(); // Read response as text first
+        const text = await response.text();
         let data;
 
-        // Attempt to parse as JSON
         try {
-            data = text ? JSON.parse(text) : null; // Check if text is not empty before parsing
+            data = text && text.trim() ? JSON.parse(text) : null; // Handle empty response
         } catch (parseError) {
             console.error("Failed to parse JSON:", parseError);
             alert("Failed to parse response from server. Please try again.");
             return;
         }
 
-        // Handle the parsed data
         if (data) {
             alert(data.message || "Joined meeting successfully!");
             navigate(`/${meetingCode}`);
@@ -64,6 +66,7 @@ function HomeComponent() {
         alert("Unable to join the meeting at this time. Please check the network or try again later.");
     }
 };
+
 
 
   const handleCreateMeeting = async () => {
