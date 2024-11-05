@@ -23,13 +23,14 @@ function HomeComponent() {
     if (!password) return;
 
     try {
-        const response = await fetch("/api/v1/meetings/join_meeting", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ meetingCode, password }),
-        });
+       const response = await fetch("https://deploy-w9cr.onrender.com/api/v1/meetings/join_meeting", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ meetingCode, password }),
+});
+
 
         if (!response.ok) {
             const status = response.status;
@@ -70,17 +71,18 @@ function HomeComponent() {
 
     console.log("Creating meeting with code:", meetingCode);
     console.log("Meeting password:", password);
-
+ 
     try {
       // Step 1: Create the meeting
-      const response = await fetch("/api/add_to_activity", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // Ensure the token is sent in the headers
-        },
-        body: JSON.stringify({ meeting_code: meetingCode, password }),
-      });
+      const response = await fetch("https://deploy-w9cr.onrender.com/api/add_to_activity", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+  body: JSON.stringify({ meeting_code: meetingCode, password }),
+});
+
 
       console.log("Create Meeting Response status:", response.status);
 
