@@ -14,7 +14,7 @@ function HomeComponent() {
   const { addToUserHistory } = useContext(AuthContext);
   const socket = useSocket();
 
-  const handleJoinVideoCall = async () => {
+ const handleJoinVideoCall = async () => {
     if (!meetingCode) {
         alert("Please enter a meeting code.");
         return;
@@ -22,23 +22,15 @@ function HomeComponent() {
 
     const password = prompt("Please enter the meeting password:");
     if (!password) return;
-    console.log("Joining meeting at:", `${server}/api/v1/meetings/join_meeting`);
-console.log("Meeting Code:", meetingCode);
-console.log("Password:", password);
-console.log("Token:", localStorage.getItem("token"));
 
     try {
-const response = await fetch("/api/v1/meetings/join_meeting", {
-
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json",
-       "Authorization": `Bearer ${localStorage.getItem("token")}` 
-    },
-    body: JSON.stringify({ meetingCode, password }),
-});
-
-
+        const response = await fetch("/api/v1/meetings/join_meeting", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ meetingCode, password }),
+        });
 
         if (!response.ok) {
             const status = response.status;
@@ -48,14 +40,12 @@ const response = await fetch("/api/v1/meetings/join_meeting", {
             return;
         }
 
-       const text = await response.text(); // Read response as text first
-console.log("Response text:", text); // Log the response text
-
+        const text = await response.text(); // Read response as text first
         let data;
 
-        // Attempt to parse as JSON, but catch any parsing errors
+        // Attempt to parse as JSON
         try {
-            data = JSON.parse(text);
+            data = text ? JSON.parse(text) : null; // Check if text is not empty before parsing
         } catch (parseError) {
             console.error("Failed to parse JSON:", parseError);
             alert("Failed to parse response from server. Please try again.");
@@ -74,6 +64,7 @@ console.log("Response text:", text); // Log the response text
         alert("Unable to join the meeting at this time. Please check the network or try again later.");
     }
 };
+
 
   const handleCreateMeeting = async () => {
     const password = prompt("Please set a password for the meeting:");
