@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { Meeting } from "../models/meeting.model.js";
 
+// User login
 const login = async (req, res) => {
   const { username, password } = req.body;
 
@@ -32,6 +33,7 @@ const login = async (req, res) => {
   }
 };
 
+// User registration
 const register = async (req, res) => {
   const { name, username, password } = req.body;
 
@@ -57,6 +59,7 @@ const register = async (req, res) => {
   }
 };
 
+// Fetch user meeting history
 const getUserHistory = async (req, res) => {
   const { token } = req.query;
 
@@ -73,31 +76,28 @@ const getUserHistory = async (req, res) => {
   }
 };
 
+// Add a meeting to user's history
 const addToHistory = async (req, res) => {
   const { token, meeting_code, password } = req.body;
 
   console.log("Request body:", req.body); // Log the request body
 
   try {
-    // Find the user associated with the provided token
     const user = await User.findOne({ token });
     if (!user) {
       console.log("User not found or invalid token");
       return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid token" });
     }
 
-    // Hash the meeting password
     const hashedPassword = await bcrypt.hash(password, 10);
     console.log("Storing hashed password for meeting:", hashedPassword);
 
-    // Create and save a new meeting record
     const newMeeting = new Meeting({
       user_id: user.username,
       meetingCode: meeting_code,
       password: hashedPassword,
     });
 
-    // Use Mongoose's built-in save method
     await newMeeting.save();
     console.log("Meeting saved successfully:", newMeeting);
     return res.status(httpStatus.CREATED).json({ message: "Meeting created successfully" });
@@ -118,12 +118,12 @@ const joinMeeting = async (req, res) => {
       return res.status(httpStatus.NOT_FOUND).json({ message: "Meeting not found" });
     }
 
-    // Log the stored and input passwords for debugging
     console.log("Stored hashed password:", meeting.password);
-    console.log("Password provided:", password);
+    console.log("Password provided for comparison:", password);
 
-    // Check password validity
     const isPasswordCorrect = await bcrypt.compare(password, meeting.password);
+    console.log("Password match result:", isPasswordCorrect);
+
     if (!isPasswordCorrect) {
       console.log("Password is incorrect");
       return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid meeting code or password" });
