@@ -36,31 +36,35 @@ function HomeComponent() {
       body: JSON.stringify({ meetingCode, password }),
     });
 
-    let data;
-    try {
-      data = await response.json();
-    } catch (parseError) {
-      console.error("Failed to parse JSON response:", parseError);
-      if (response.status === 204) {
-        // Handle 204 No Content response
-        alert("Joined meeting successfully!");
-        navigate(`/${meetingCode}`);
-        return;
+    if (!response.ok) {
+      if (response.status === 401) {
+        alert("Incorrect password.");
+      } else if (response.status === 404) {
+        alert("Meeting not found.");
       } else {
         alert("An error occurred. Please try again.");
+      }
+      return;
+    }
+
+    let data;
+    const textResponse = await response.text();
+    if (textResponse) {
+      try {
+        data = JSON.parse(textResponse);
+      } catch (parseError) {
+        console.error("Failed to parse JSON response:", parseError);
+        alert("An unexpected error occurred. Please try again.");
         return;
       }
     }
 
-    if (response.ok) {
+    if (data && data.meetingCode) {
       alert("Joined meeting successfully!");
       navigate(`/${data.meetingCode}`);
-    } else if (response.status === 401) {
-      alert("Incorrect password.");
-    } else if (response.status === 404) {
-      alert("Meeting not found.");
     } else {
-      alert("An error occurred: " + (data?.message || "Please try again."));
+      alert("Joined meeting successfully!");
+      navigate(`/${meetingCode}`);
     }
   } catch (error) {
     console.error("Error joining meeting:", error);
