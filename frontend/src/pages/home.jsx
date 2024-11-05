@@ -14,74 +14,68 @@ function HomeComponent() {
     const { addToUserHistory } = useContext(AuthContext);
     const socket = useSocket();
 
-   const handleJoinVideoCall = async () => {
-    if (!meetingCode) {
-        alert("Please enter a meeting code.");
-        return;
-    }
-
-    const password = prompt("Please enter the meeting password:");
-    if (!password) return;
-
-    try {
-        const response = await fetch("https://deploy-w9cr.onrender.com/api/v1/meetings/join_meeting", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ meetingCode, password }),
-        });
-
-        const text = await response.text(); // Read response as text
-
-        let data;
-        try {
-            data = JSON.parse(text); // Attempt to parse as JSON
-        } catch (parseError) {
-            console.error("Failed to parse JSON:", parseError);
-            console.log("Response text:", text);
-            alert("Failed to parse response from server. Please try again.");
+    const handleJoinVideoCall = async () => {
+        if (!meetingCode) {
+            alert("Please enter a meeting code.");
             return;
         }
 
-        if (data) {
-            alert(data.message || "Joined meeting successfully!");
-            navigate(`/${meetingCode}`);
-        } else {
-            alert("An error occurred. Please try again.");
-        }
-    } catch (error) {
-        console.error("Error joining meeting:", error);
-        alert("Unable to join the meeting at this time. Please check the network or try again later.");
-    }
-};
+        const password = prompt("Please enter the meeting password:");
+        if (!password) return;
 
+        try {
+            const response = await fetch("/api/v1/meetings/join_meeting", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify({ meetingCode, password }),
+            });
+
+            console.log("Join Meeting Response:", response);
+
+            if (response.ok) {
+                alert("Joined meeting successfully!");
+                navigate(`/${meetingCode}`);
+            } else if (response.status === 401) {
+                alert("Incorrect password.");
+            } else if (response.status === 404) {
+                alert("Meeting not found.");
+            } else {
+                const errorText = await response.text();
+                alert("Error joining meeting: " + errorText);
+            }
+        } catch (error) {
+            console.error("Error joining meeting:", error);
+            alert("Unable to join the meeting at this time.");
+        }
+    };
 
     const handleCreateMeeting = async () => {
         const password = prompt("Please set a password for the meeting:");
         if (!password) return;
-
-        console.log("Creating meeting with code:", meetingCode);
-        console.log("Meeting password:", password);
 
         try {
             const response = await fetch("/api/add_to_activity", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${localStorage.getItem("token")}`, // Ensure the token is sent in the headers
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
                 },
                 body: JSON.stringify({ meeting_code: meetingCode, password }),
             });
 
-            console.log("Create Meeting Response status:", response.status);
+            console.log("Create Meeting Response:", response);
 
-            if (response.ok) {
-                await addToUserHistory(meetingCode, password);
-                alert("Meeting created successfully!");
-            } else {
-                alert("Error creating meeting.");
+            if (!response.ok) {
+                const errorText = await response.text();
+                alert("Error creating meeting: " + errorText);
+                return;
             }
+
+            await addToUserHistory(meetingCode, password);
+            alert("Meeting created successfully!");
         } catch (error) {
             console.error("Error creating meeting:", error);
             alert("Unable to create the meeting at this time.");
