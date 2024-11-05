@@ -14,7 +14,7 @@ function HomeComponent() {
     const { addToUserHistory } = useContext(AuthContext);
     const socket = useSocket();
 
-  const handleJoinVideoCall = async () => {
+ const handleJoinVideoCall = async () => {
   if (!meetingCode) {
     alert("Please enter a meeting code.");
     return;
@@ -67,7 +67,6 @@ function HomeComponent() {
     alert("Unable to join the meeting at this time.");
   }
 };
-
     const handleCreateMeeting = async () => {
         const password = prompt("Please set a password for the meeting:");
         if (!password) return;
