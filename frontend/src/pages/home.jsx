@@ -23,10 +23,11 @@ function HomeComponent() {
     if (!password) return;
 
     try {
-      const response = await fetch("/api/v1/meetings/join_meeting", {
+      const response = await fetch(`${server}/api/v1/meetings/join_meeting`, {
     method: "POST",
     headers: {
         "Content-Type": "application/json",
+       "Authorization": `Bearer ${localStorage.getItem("token")}` 
     },
     body: JSON.stringify({ meetingCode, password }),
 });
@@ -41,7 +42,9 @@ function HomeComponent() {
             return;
         }
 
-        const text = await response.text(); // Read response as text first
+       const text = await response.text(); // Read response as text first
+console.log("Response text:", text); // Log the response text
+
         let data;
 
         // Attempt to parse as JSON, but catch any parsing errors
