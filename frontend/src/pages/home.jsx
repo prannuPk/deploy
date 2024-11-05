@@ -13,48 +13,45 @@ function HomeComponent() {
   const { addToUserHistory } = useContext(AuthContext);
   const socket = useSocket();
 
-  const handleJoinVideoCall = async () => {
+ const handleJoinVideoCall = async () => {
     if (!meetingCode) {
-      alert("Please enter a meeting code.");
-      return;
+        alert("Please enter a meeting code.");
+        return;
     }
 
-    // Prompt for the meeting password
     const password = prompt("Please enter the meeting password:");
-    if (!password) return; // Exit if no password is provided
+    if (!password) return;
 
-    // Log meeting code and password for debugging
     console.log("Meeting Code:", meetingCode);
     console.log("Password:", password);
 
     try {
-      // Send meeting code and password for validation
-      const response = await fetch("/api/join_meeting", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ meeting_code: meetingCode, password }),
-      });
+        // Adjust the key from 'meeting_code' to 'meetingCode'
+        const response = await fetch("/api/join_meeting", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ meetingCode, password }), // Use the same key as in the backend
+        });
 
-      // Log the response status
-      console.log("Response status:", response.status);
+        console.log("Response status:", response.status);
 
-      if (response.ok) {
-        alert("Joined meeting successfully!");
-        navigate(`/${meetingCode}`);
-      } else if (response.status === 401) {
-        alert("Incorrect password.");
-      } else if (response.status === 404) {
-        alert("Meeting not found.");
-      } else {
-        alert("An error occurred. Please try again.");
-      }
+        if (response.ok) {
+            alert("Joined meeting successfully!");
+            navigate(`/${meetingCode}`);
+        } else if (response.status === 401) {
+            alert("Incorrect password.");
+        } else if (response.status === 404) {
+            alert("Meeting not found.");
+        } else {
+            alert("An error occurred. Please try again.");
+        }
     } catch (error) {
-      console.error("Error joining meeting:", error);
-      alert("Unable to join the meeting at this time.");
+        console.error("Error joining meeting:", error);
+        alert("Unable to join the meeting at this time.");
     }
-  };
+};
 
  const handleCreateMeeting = async () => {
     const password = prompt("Please set a password for the meeting:");
