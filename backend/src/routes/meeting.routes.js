@@ -1,6 +1,6 @@
 import express from 'express';
 import { Meeting } from '../models/meeting.model.js';
-import bcrypt from 'bcrypt'; // Import bcrypt
+import bcrypt from 'bcrypt';
 
 const router = express.Router();
 
