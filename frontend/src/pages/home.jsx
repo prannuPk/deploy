@@ -43,7 +43,7 @@ function HomeComponent() {
 
       if (response.ok) {
         alert("Joined meeting successfully!");
-        navigate(/${meetingCode});
+        navigate(`/${meetingCode}`);
       } else if (response.status === 401) {
         alert("Incorrect password.");
       } else if (response.status === 404) {
