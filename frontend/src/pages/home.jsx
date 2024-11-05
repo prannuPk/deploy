@@ -13,50 +13,48 @@ function HomeComponent() {
   const { addToUserHistory } = useContext(AuthContext);
   const socket = useSocket();
 
-const handleJoinVideoCall = async () => {
-  if (!meetingCode) {
-    alert("Please enter a meeting code.");
-    return;
-  }
-
-  const password = prompt("Please enter the meeting password:");
-  if (!password) return;
-
-  try {
-    const response = await fetch("/api/v1/meetings/join_meeting", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ meetingCode, password }),
-    });
-
-    if (!response.ok) {
-      const status = response.status;
-      const text = await response.text();
-      console.error("Error joining meeting:", status, text);
-      alert(`Meeting join failed. Status: ${status}. Details in console.`);
+  const handleJoinVideoCall = async () => {
+    if (!meetingCode) {
+      alert("Please enter a meeting code.");
       return;
     }
 
-    const data = response.ok ? await response.json().catch(error => null) : null;
+    const password = prompt("Please enter the meeting password:");
+    if (!password) return;
 
-    if (data) {
-      alert(data.message || "Joined meeting successfully!");
-      navigate(`/${meetingCode}`);
-    } else {
-      alert("An error occurred. Please try again."); // Handle case if data is null
+    try {
+      const response = await fetch("/api/v1/meetings/join_meeting", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ meetingCode, password }),
+      });
+
+      // Check if the response is ok
+      if (!response.ok) {
+        const status = response.status;
+        const text = await response.text();
+        console.error("Error joining meeting:", status, text);
+        alert(`Meeting join failed. Status: ${status}. Details in console.`);
+        return;
+      }
+
+      const data = await response.json(); // Parse the response JSON
+
+      if (data) {
+        alert(data.message || "Joined meeting successfully!");
+        navigate(`/${meetingCode}`);
+      } else {
+        alert("An error occurred. Please try again."); // Handle case if data is null
+      }
+    } catch (error) {
+      console.error("Error joining meeting:", error);
+      alert("Unable to join the meeting at this time. Please check the network or try again later.");
     }
-  } catch (error) {
-    console.error("Error joining meeting:", error);
-    console.error("Response status:", response.status);
-    console.error("Response text:", await response.text()); // Log the raw response for debugging
-    alert("Unable to join the meeting at this time. Please check the network or try again later.");
-  }
-};
+  };
 
-
- const handleCreateMeeting = async () => {
+  const handleCreateMeeting = async () => {
     const password = prompt("Please set a password for the meeting:");
     if (!password) return;
 
@@ -64,31 +62,30 @@ const handleJoinVideoCall = async () => {
     console.log("Meeting password:", password);
 
     try {
-        // Step 1: Create the meeting
-        const response = await fetch("/api/add_to_activity", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`, // Ensure the token is sent in the headers
-            },
-            body: JSON.stringify({ meeting_code: meetingCode, password }),
-        });
+      // Step 1: Create the meeting
+      const response = await fetch("/api/add_to_activity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // Ensure the token is sent in the headers
+        },
+        body: JSON.stringify({ meeting_code: meetingCode, password }),
+      });
 
-        console.log("Create Meeting Response status:", response.status);
+      console.log("Create Meeting Response status:", response.status);
 
-        if (response.ok) {
-            // Step 2: After creating the meeting, log it in user history
-            await addToUserHistory(meetingCode, password);  // Call the function here to log the activity
-            alert("Meeting created successfully!");
-        } else {
-            alert("Error creating meeting.");
-        }
+      if (response.ok) {
+        // Step 2: After creating the meeting, log it in user history
+        await addToUserHistory(meetingCode, password);  // Call the function here to log the activity
+        alert("Meeting created successfully!");
+      } else {
+        alert("Error creating meeting.");
+      }
     } catch (error) {
-        console.error("Error creating meeting:", error);
-        alert("Unable to create the meeting at this time.");
+      console.error("Error creating meeting:", error);
+      alert("Unable to create the meeting at this time.");
     }
-};
-
+  };
 
   return (
     <>
