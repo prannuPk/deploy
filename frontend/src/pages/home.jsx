@@ -28,33 +28,28 @@ const handleJoinVideoCall = async () => {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ meeting_code: meetingCode, password }),
+            body: JSON.stringify({ meetingCode, password }), // Use meetingCode here
         });
 
+        // Check and log the response
         console.log("Response status:", response.status);
-        const text = await response.text(); // Get the raw response as text
-        console.log("Response text:", text); // Log the raw response for debugging
-
-        let data;
-        try {
-            data = text ? JSON.parse(text) : null; // Parse the response if it is not empty
-        } catch (error) {
-            console.error("Error parsing JSON:", error);
-        }
-
-        console.log("Parsed response data:", data); // Log the parsed data
+        
+        // Ensure the response is valid before parsing
+        const data = response.ok ? await response.json() : null; // Only parse JSON if response is ok
+        console.log("Parsed response data:", data); // Log the response data for debugging
 
         if (response.ok) {
             alert(data.message || "Joined meeting successfully!");
             navigate(`/${meetingCode}`);
         } else {
-            alert(data?.message || "An error occurred. Please try again.");
+            alert(data?.message || "An error occurred. Please try again."); // Handle case if data is null
         }
     } catch (error) {
         console.error("Error joining meeting:", error);
         alert("Unable to join the meeting at this time.");
     }
 };
+
 
 
  const handleCreateMeeting = async () => {
