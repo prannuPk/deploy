@@ -28,7 +28,8 @@ console.log("Password:", password);
 console.log("Token:", localStorage.getItem("token"));
 
     try {
-      const response = await fetch(`${server}/api/v1/meetings/join_meeting`, {
+const response = await fetch("/api/v1/meetings/join_meeting", {
+
     method: "POST",
     headers: {
         "Content-Type": "application/json",
