@@ -1,14 +1,23 @@
 import express from "express";
-import { createServer } from "node:http";
+import { createServer } from "node:http"; // Ensure using the 'node:http' for Node.js
 import mongoose from "mongoose";
 import cors from "cors";
 import userRoutes from "./routes/users.routes.js";
-import meetingRoutes from "./routes/meeting.routes.js"; // <-- Import the meeting routes
+import meetingRoutes from "./routes/meeting.routes.js"; // Import the meeting routes
 import { connectToSocket } from "./controllers/socketManager.js";
 
 const app = express();
 const server = createServer(app);
-const io = connectToSocket(server);
+
+// Configure Socket.IO with CORS settings
+const io = connectToSocket(server, {
+    cors: {
+        origin: 'https://deploy-1-dxg9.onrender.com', // Frontend URL
+        methods: ["GET", "POST"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: true // Allow credentials
+    }
+});
 
 app.set("port", process.env.PORT || 8000);
 
@@ -20,7 +29,7 @@ const corsOptions = {
    credentials: true
 };
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight requests
 
 app.use(express.json({ limit: "40kb" }));
 app.use(express.urlencoded({ limit: "40kb", extended: true }));
@@ -29,7 +38,7 @@ app.use(express.urlencoded({ limit: "40kb", extended: true }));
 app.use("/api/v1/users", userRoutes);
 
 // Define meeting-related routes
-app.use("/api/v1/meetings", meetingRoutes); // <-- Add this line
+app.use("/api/v1/meetings", meetingRoutes); // Add meeting routes
 
 // Connect to the database and start the server
 const start = async () => {
