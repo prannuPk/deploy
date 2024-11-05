@@ -1,23 +1,24 @@
 import express from 'express';
 import { Meeting } from '../models/meeting.model.js'; // Ensure correct import of Meeting model
+import bcrypt from 'bcrypt'; // Import bcrypt
 
 const router = express.Router();
 
 // Join Meeting Route
 router.post('/join_meeting', async (req, res) => {
     const { meetingCode, password } = req.body;
-    console.log("Incoming request:", req.body); // Check incoming request
+    console.log("Incoming request:", req.body);
 
     try {
-        // Make sure the field name here matches your model
         const meeting = await Meeting.findOne({ meetingCode });
 
         if (!meeting) {
             return res.status(404).json({ message: "Meeting not found" });
         }
 
-        // If passwords are hashed, compare using bcrypt
-        if (meeting.password !== password) {
+        // Use bcrypt to compare the passwords
+        const passwordMatch = await bcrypt.compare(password, meeting.password);
+        if (!passwordMatch) {
             return res.status(401).json({ message: "Incorrect password" });
         }
 
