@@ -23,7 +23,7 @@ router.post('/join_meeting', async (req, res) => {
         }
 
         // Successfully joined the meeting
-        return res.status(200).json({ message: "Successfully joined meeting" });
+        return res.status(200).json({ message: "Successfully joined meeting", meetingCode }); // Include meetingCode in response
 
     } catch (error) {
         console.error("Error joining meeting:", error);
