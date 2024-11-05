@@ -16,56 +16,46 @@ function HomeComponent() {
 
  const handleJoinVideoCall = async () => {
     if (!meetingCode) {
-        alert("Please enter a meeting code.");
-        return;
+      alert("Please enter a meeting code.");
+      return;
     }
 
+    // Prompt for the meeting password
     const password = prompt("Please enter the meeting password:");
-    if (!password) return;
+    if (!password) return; // Exit if no password is provided
 
+    // Log meeting code and password for debugging
     console.log("Meeting Code:", meetingCode);
     console.log("Password:", password);
 
     try {
-        const response = await fetch("/api/v1/meetings/join_meeting", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("token")}`, // Include the token
-            },
-            body: JSON.stringify({ meetingCode, password }),
-        });
+      // Send meeting code and password for validation
+      const response = await fetch("/api/join_meeting", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ meeting_code: meetingCode, password }),
+      });
 
-        if (!response.ok) {
-            const status = response.status;
-            const text = await response.text(); // Capture the response text
-            console.error("Error joining meeting:", status, text);
-            alert(`Meeting join failed. Status: ${status}. Details: ${text}`);
-            return;
-        }
+      // Log the response status
+      console.log("Response status:", response.status);
 
-        const text = await response.text();
-        let data;
-
-        try {
-            data = text && text.trim() ? JSON.parse(text) : null; // Handle empty response
-        } catch (parseError) {
-            console.error("Failed to parse JSON:", parseError);
-            alert("Failed to parse response from server. Please try again.");
-            return;
-        }
-
-        if (data) {
-            alert(data.message || "Joined meeting successfully!");
-            navigate(`/${meetingCode}`);
-        } else {
-            alert("An error occurred. Please try again.");
-        }
+      if (response.ok) {
+        alert("Joined meeting successfully!");
+        navigate(/${meetingCode});
+      } else if (response.status === 401) {
+        alert("Incorrect password.");
+      } else if (response.status === 404) {
+        alert("Meeting not found.");
+      } else {
+        alert("An error occurred. Please try again.");
+      }
     } catch (error) {
-        console.error("Error joining meeting:", error);
-        alert("Unable to join the meeting at this time. Please check the network or try again later.");
+      console.error("Error joining meeting:", error);
+      alert("Unable to join the meeting at this time.");
     }
-};
+  };
 
 
 
