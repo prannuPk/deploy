@@ -23,7 +23,8 @@ function HomeComponent() {
     if (!password) return;
 
     try {
-        const response = await fetch("/api/join_meeting", {
+        // Update the endpoint here
+        const response = await fetch("/api/v1/meetings/join_meeting", { // Corrected endpoint
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -73,7 +74,6 @@ function HomeComponent() {
             // Step 2: After creating the meeting, log it in user history
             await addToUserHistory(meetingCode, password);  // Call the function here to log the activity
             alert("Meeting created successfully!");
-            navigate(`/${meetingCode}`);
         } else {
             alert("Error creating meeting.");
         }
