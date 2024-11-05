@@ -31,14 +31,29 @@ function HomeComponent() {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("token")}`, // Add the token here
+                "Authorization": `Bearer ${localStorage.getItem("token")}`,
             },
             body: JSON.stringify({ meetingCode, password }),
         });
 
-        const responseData = await response.json(); // Parse the response as JSON
-        console.log("Join Meeting Response Data:", responseData);
+        // Check if the response is not empty
+        const text = await response.text(); // Read the response as text
+        let data;
 
+        // Attempt to parse as JSON, but catch any parsing errors
+        try {
+            if (text) { // Ensure text is not empty
+                data = JSON.parse(text);
+            } else {
+                console.warn("Empty response received");
+            }
+        } catch (parseError) {
+            console.error("Failed to parse JSON:", parseError);
+            alert("Failed to parse response from server. Please try again.");
+            return;
+        }
+
+        // Handle the response
         if (response.ok) {
             alert("Joined meeting successfully!");
             navigate(`/${meetingCode}`);
@@ -47,7 +62,7 @@ function HomeComponent() {
         } else if (response.status === 404) {
             alert("Meeting not found.");
         } else {
-            alert("An error occurred: " + responseData.message || "Please try again.");
+            alert("An error occurred: " + (data?.message || "Please try again."));
         }
     } catch (error) {
         console.error("Error joining meeting:", error);
