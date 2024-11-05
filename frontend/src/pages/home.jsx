@@ -15,44 +15,54 @@ function HomeComponent() {
 
   const handleJoinVideoCall = async () => {
     if (!meetingCode) {
-      alert("Please enter a meeting code.");
-      return;
+        alert("Please enter a meeting code.");
+        return;
     }
 
     const password = prompt("Please enter the meeting password:");
     if (!password) return;
 
     try {
-      const response = await fetch("/api/v1/meetings/join_meeting", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ meetingCode, password }),
-      });
+        const response = await fetch("/api/v1/meetings/join_meeting", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ meetingCode, password }),
+        });
 
-      // Check if the response is ok
-      if (!response.ok) {
-        const status = response.status;
-        const text = await response.text();
-        console.error("Error joining meeting:", status, text);
-        alert(`Meeting join failed. Status: ${status}. Details in console.`);
-        return;
-      }
+        if (!response.ok) {
+            const status = response.status;
+            const text = await response.text(); // Capture the response text
+            console.error("Error joining meeting:", status, text);
+            alert(`Meeting join failed. Status: ${status}. Details: ${text}`);
+            return;
+        }
 
-      const data = await response.json(); // Parse the response JSON
+        const text = await response.text(); // Read response as text first
+        let data;
 
-      if (data) {
-        alert(data.message || "Joined meeting successfully!");
-        navigate(`/${meetingCode}`);
-      } else {
-        alert("An error occurred. Please try again."); // Handle case if data is null
-      }
+        // Attempt to parse as JSON, but catch any parsing errors
+        try {
+            data = JSON.parse(text);
+        } catch (parseError) {
+            console.error("Failed to parse JSON:", parseError);
+            alert("Failed to parse response from server. Please try again.");
+            return;
+        }
+
+        // Handle the parsed data
+        if (data) {
+            alert(data.message || "Joined meeting successfully!");
+            navigate(`/${meetingCode}`);
+        } else {
+            alert("An error occurred. Please try again.");
+        }
     } catch (error) {
-      console.error("Error joining meeting:", error);
-      alert("Unable to join the meeting at this time. Please check the network or try again later.");
+        console.error("Error joining meeting:", error);
+        alert("Unable to join the meeting at this time. Please check the network or try again later.");
     }
-  };
+};
 
   const handleCreateMeeting = async () => {
     const password = prompt("Please set a password for the meeting:");
