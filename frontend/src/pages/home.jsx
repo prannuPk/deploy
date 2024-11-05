@@ -23,13 +23,14 @@ function HomeComponent() {
     if (!password) return;
 
     try {
-       const response = await fetch("https://deploy-w9cr.onrender.com/api/v1/meetings/join_meeting", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ meetingCode, password }),
+      const response = await fetch("/api/v1/meetings/join_meeting", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ meetingCode, password }),
 });
+
 
 
         if (!response.ok) {
