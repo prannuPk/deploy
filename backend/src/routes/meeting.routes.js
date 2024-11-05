@@ -13,18 +13,14 @@ router.post('/join_meeting', async (req, res) => {
         const meeting = await Meeting.findOne({ meetingCode });
 
         if (!meeting) {
-            // Meeting not found
             return res.status(404).json({ message: "Meeting not found" });
         }
 
-        // Use bcrypt to compare the passwords
         const passwordMatch = await bcrypt.compare(password, meeting.password);
         if (!passwordMatch) {
-            // Incorrect password
             return res.status(401).json({ message: "Incorrect password" });
         }
 
-        // If meeting exists and password is correct, return success
         return res.status(200).json({ message: "Successfully joined meeting", meetingCode });
     } catch (error) {
         console.error("Error joining meeting:", error);
