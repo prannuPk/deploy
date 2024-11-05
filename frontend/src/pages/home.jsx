@@ -14,42 +14,46 @@ function HomeComponent() {
   const socket = useSocket();
 
 const handleJoinVideoCall = async () => {
-    if (!meetingCode) {
-        alert("Please enter a meeting code.");
-        return;
+  if (!meetingCode) {
+    alert("Please enter a meeting code.");
+    return;
+  }
+
+  const password = prompt("Please enter the meeting password:");
+  if (!password) return;
+
+  try {
+    const response = await fetch("/api/v1/meetings/join_meeting", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ meetingCode, password }),
+    });
+
+    if (!response.ok) {
+      const status = response.status;
+      const text = await response.text();
+      console.error("Error joining meeting:", status, text);
+      alert(`Meeting join failed. Status: ${status}. Details in console.`);
+      return;
     }
 
-    const password = prompt("Please enter the meeting password:");
-    if (!password) return;
+    const data = response.ok ? await response.json().catch(error => null) : null;
 
-    try {
-        const response = await fetch("/api/v1/meetings/join_meeting", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ meetingCode, password }), // Use meetingCode here
-        });
-
-        // Check and log the response
-        console.log("Response status:", response.status);
-        
-        // Ensure the response is valid before parsing
-        const data = response.ok ? await response.json() : null; // Only parse JSON if response is ok
-        console.log("Parsed response data:", data); // Log the response data for debugging
-
-        if (response.ok) {
-            alert(data.message || "Joined meeting successfully!");
-            navigate(`/${meetingCode}`);
-        } else {
-            alert(data?.message || "An error occurred. Please try again."); // Handle case if data is null
-        }
-    } catch (error) {
-        console.error("Error joining meeting:", error);
-        alert("Unable to join the meeting at this time.");
+    if (data) {
+      alert(data.message || "Joined meeting successfully!");
+      navigate(`/${meetingCode}`);
+    } else {
+      alert("An error occurred. Please try again."); // Handle case if data is null
     }
+  } catch (error) {
+    console.error("Error joining meeting:", error);
+    console.error("Response status:", response.status);
+    console.error("Response text:", await response.text()); // Log the raw response for debugging
+    alert("Unable to join the meeting at this time. Please check the network or try again later.");
+  }
 };
-
 
 
  const handleCreateMeeting = async () => {
