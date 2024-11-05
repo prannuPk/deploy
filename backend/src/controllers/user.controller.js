@@ -109,6 +109,7 @@ const addToHistory = async (req, res) => {
 };
 
 // Validate meeting code and password for joining
+// The relevant part is the `joinMeeting` function
 const joinMeeting = async (req, res) => {
   const { meeting_code, password } = req.body;
 
