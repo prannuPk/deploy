@@ -113,26 +113,31 @@ const joinMeeting = async (req, res) => {
   const { meeting_code, password } = req.body;
 
   try {
+    // Fetch the meeting based on the code
     const meeting = await Meeting.findOne({ meetingCode: meeting_code });
     if (!meeting) {
+      console.log("Meeting not found with code:", meeting_code);
       return res.status(httpStatus.NOT_FOUND).json({ message: "Meeting not found" });
     }
 
-    console.log("Stored hashed password:", meeting.password);
-    console.log("Password provided for comparison:", password);
+    console.log("Stored hashed password in DB:", meeting.password);
+    console.log("Password provided by user:", password);
 
+    // Compare the provided password with the hashed password in DB
     const isPasswordCorrect = await bcrypt.compare(password, meeting.password);
+
+    // Explicitly log the comparison result
     console.log("Password match result:", isPasswordCorrect);
 
     if (!isPasswordCorrect) {
-      console.log("Password is incorrect");
+      console.log("Password is incorrect for meeting code:", meeting_code);
       return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid meeting code or password" });
     }
 
     console.log("Password is correct, joining the meeting");
     return res.status(httpStatus.OK).json({ message: "Joined meeting successfully" });
   } catch (e) {
-    console.error("Error joining meeting:", e);
+    console.error("Error in joinMeeting function:", e);
     return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Error joining meeting: ${e.message}` });
   }
 };
