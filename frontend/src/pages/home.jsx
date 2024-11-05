@@ -74,14 +74,14 @@ function HomeComponent() {
  
     try {
       // Step 1: Create the meeting
-      const response = await fetch("https://deploy-w9cr.onrender.com/api/add_to_activity", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-  },
-  body: JSON.stringify({ meeting_code: meetingCode, password }),
-});
+  const response = await fetch("/api/add_to_activity", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`, // Ensure the token is sent in the headers
+            },
+            body: JSON.stringify({ meeting_code: meetingCode, password }),
+        });
 
 
       console.log("Create Meeting Response status:", response.status);
