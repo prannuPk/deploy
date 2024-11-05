@@ -14,7 +14,7 @@ function HomeComponent() {
     const { addToUserHistory } = useContext(AuthContext);
     const socket = useSocket();
 
-   const handleJoinVideoCall = async () => {
+  const handleJoinVideoCall = async () => {
   if (!meetingCode) {
     alert("Please enter a meeting code.");
     return;
@@ -36,19 +36,31 @@ function HomeComponent() {
       body: JSON.stringify({ meetingCode, password }),
     });
 
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error("Failed to parse JSON response:", parseError);
+      if (response.status === 204) {
+        // Handle 204 No Content response
+        alert("Joined meeting successfully!");
+        navigate(`/${meetingCode}`);
+        return;
+      } else {
+        alert("An error occurred. Please try again.");
+        return;
+      }
+    }
+
     if (response.ok) {
-      const data = await response.json();
       alert("Joined meeting successfully!");
       navigate(`/${data.meetingCode}`);
+    } else if (response.status === 401) {
+      alert("Incorrect password.");
+    } else if (response.status === 404) {
+      alert("Meeting not found.");
     } else {
-      const errorData = await response.json();
-      if (response.status === 401) {
-        alert("Incorrect password.");
-      } else if (response.status === 404) {
-        alert("Meeting not found.");
-      } else {
-        alert("An error occurred: " + (errorData?.message || "Please try again."));
-      }
+      alert("An error occurred: " + (data?.message || "Please try again."));
     }
   } catch (error) {
     console.error("Error joining meeting:", error);
