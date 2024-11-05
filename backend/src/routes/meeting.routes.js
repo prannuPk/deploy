@@ -1,18 +1,17 @@
 import express from 'express';
-import { Meeting } from '../models/meeting.model.js';
- // Make sure to adjust the path to your Meeting model
+import { Meeting } from '../models/meeting.model.js'; // Ensure correct import of Meeting model
 
 const router = express.Router();
 
 // Join Meeting Route
 router.post('/join_meeting', async (req, res) => {
-    const { meeting_code, password } = req.body;
+    const { meetingCode, password } = req.body; // Use meetingCode (with uppercase 'C')
 
     console.log("Incoming request:", req.body); // Log the incoming payload
 
     try {
-        // Find the meeting in the database
-        const meeting = await Meeting.findOne({ meeting_code });
+        // Find the meeting in the database using meetingCode
+        const meeting = await Meeting.findOne({ meetingCode }); // Correct field name
 
         if (!meeting) {
             return res.status(404).json({ message: "Meeting not found" });
