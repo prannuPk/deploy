@@ -16,8 +16,8 @@ function HomeComponent() {
 
    const handleJoinVideoCall = async () => {
   if (!meetingCode) {
-      alert("Please enter a meeting code.");
-      return;
+    alert("Please enter a meeting code.");
+    return;
   }
 
   const password = prompt("Please enter the meeting password:");
@@ -27,31 +27,32 @@ function HomeComponent() {
   console.log("Password:", password);
 
   try {
-      const response = await fetch("/api/v1/meetings/join_meeting", {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({ meetingCode, password }),
-      });
+    const response = await fetch("/api/v1/meetings/join_meeting", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({ meetingCode, password }),
+    });
 
-      // Handle the response
-      if (response.ok) {
-          const data = await response.json();
-          alert("Joined meeting successfully!");
-          navigate(`/${data.meetingCode}`);
-      } else if (response.status === 401) {
-          alert("Incorrect password.");
+    if (response.ok) {
+      const data = await response.json();
+      alert("Joined meeting successfully!");
+      navigate(`/${data.meetingCode}`);
+    } else {
+      const errorData = await response.json();
+      if (response.status === 401) {
+        alert("Incorrect password.");
       } else if (response.status === 404) {
-          alert("Meeting not found.");
+        alert("Meeting not found.");
       } else {
-          const errorData = await response.json();
-          alert("An error occurred: " + (errorData?.message || "Please try again."));
+        alert("An error occurred: " + (errorData?.message || "Please try again."));
       }
+    }
   } catch (error) {
-      console.error("Error joining meeting:", error);
-      alert("Unable to join the meeting at this time.");
+    console.error("Error joining meeting:", error);
+    alert("Unable to join the meeting at this time.");
   }
 };
 
