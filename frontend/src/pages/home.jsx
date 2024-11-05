@@ -13,7 +13,7 @@ function HomeComponent() {
   const { addToUserHistory } = useContext(AuthContext);
   const socket = useSocket();
 
- const handleJoinVideoCall = async () => {
+const handleJoinVideoCall = async () => {
     if (!meetingCode) {
         alert("Please enter a meeting code.");
         return;
@@ -23,8 +23,7 @@ function HomeComponent() {
     if (!password) return;
 
     try {
-        // Update the endpoint here
-        const response = await fetch("/api/v1/meetings/join_meeting", { // Corrected endpoint
+        const response = await fetch("/api/v1/meetings/join_meeting", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -32,23 +31,31 @@ function HomeComponent() {
             body: JSON.stringify({ meeting_code: meetingCode, password }),
         });
 
-        // Check and log the response
         console.log("Response status:", response.status);
-        
-        const data = await response.json(); // Parse the response JSON
-        console.log("Response data:", data); // Log the response data for debugging
+        const text = await response.text(); // Get the raw response as text
+        console.log("Response text:", text); // Log the raw response for debugging
+
+        let data;
+        try {
+            data = text ? JSON.parse(text) : null; // Parse the response if it is not empty
+        } catch (error) {
+            console.error("Error parsing JSON:", error);
+        }
+
+        console.log("Parsed response data:", data); // Log the parsed data
 
         if (response.ok) {
             alert(data.message || "Joined meeting successfully!");
             navigate(`/${meetingCode}`);
         } else {
-            alert(data.message || "An error occurred. Please try again.");
+            alert(data?.message || "An error occurred. Please try again.");
         }
     } catch (error) {
         console.error("Error joining meeting:", error);
         alert("Unable to join the meeting at this time.");
     }
 };
+
 
  const handleCreateMeeting = async () => {
     const password = prompt("Please set a password for the meeting:");
