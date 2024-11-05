@@ -1,5 +1,5 @@
 import express from 'express';
-import Meeting from './models/meeting.model.js'; // Make sure to adjust the path to your Meeting model
+import Meeting from '../models/meeting.model.js'; // Make sure to adjust the path to your Meeting model
 
 const router = express.Router();
 
