@@ -15,38 +15,35 @@ function HomeComponent() {
     const socket = useSocket();
 
  // In home.jsx, update handleCreateMeeting:
-const handleCreateMeeting = async () => {
-    const password = prompt("Please set a password for the meeting:");
-    if (!password) return;
+ const handleCreateMeeting = async () => {
+        const password = prompt("Please set a password for the meeting:");
+        if (!password) return;
 
-    try {
-        const response = await fetch("/api/v1/meetings/create", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({
-                meetingCode,
-                password,
-                userId: localStorage.getItem("userId") // Make sure you store this during login
-            }),
-        });
+        try {
+            const response = await fetch("/api/add_to_activity", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify({ meeting_code: meetingCode, password }),
+            });
 
-        const data = await response.json();
+            console.log("Create Meeting Response:", response);
 
-        if (!data.success) {
-            alert(data.message);
-            return;
+            if (!response.ok) {
+                const errorText = await response.text();
+                alert("Error creating meeting: " + errorText);
+                return;
+            }
+
+            await addToUserHistory(meetingCode, password);
+            alert("Meeting created successfully!");
+        } catch (error) {
+            console.error("Error creating meeting:", error);
+            alert("Unable to create the meeting at this time.");
         }
-
-        alert("Meeting created successfully!");
-        await addToUserHistory(meetingCode, password);
-    } catch (error) {
-        console.error("Error creating meeting:", error);
-        alert("Unable to create the meeting at this time.");
-    }
-};
+    };
 
 // Update handleJoinVideoCall:
 // Update handleJoinVideoCall:
