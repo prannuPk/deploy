@@ -110,42 +110,59 @@ const addToHistory = async (req, res) => {
 
 // Validate meeting code and password for joining
 // The relevant part is the `joinMeeting` function
+// In user.controller.js
+
 const joinMeeting = async (req, res) => {
-  const { meeting_code, password } = req.body;
+    const { meeting_code, password } = req.body;
 
-  try {
-    // Fetch the meeting based on the code
-    const meeting = await Meeting.findOne({ meetingCode: meeting_code });
-    
-    if (!meeting) {
-      return res.status(httpStatus.NOT_FOUND).json({ 
-        message: "Meeting not found",
-        success: false 
-      });
+    if (!meeting_code || !password) {
+        return res.status(400).json({
+            success: false,
+            message: "Meeting code and password are required"
+        });
     }
 
-    // Compare the provided password with the hashed password in DB
-    const isPasswordCorrect = await bcrypt.compare(password, meeting.password);
+    try {
+        const meeting = await Meeting.findOne({ meetingCode: meeting_code });
 
-    if (!isPasswordCorrect) {
-      return res.status(httpStatus.UNAUTHORIZED).json({ 
-        message: "Incorrect password",
-        success: false 
-      });
+        if (!meeting) {
+            return res.status(404).json({
+                success: false,
+                message: "Meeting not found"
+            });
+        }
+
+        // Ensure we have a password to compare against
+        if (!meeting.password) {
+            return res.status(500).json({
+                success: false,
+                message: "Meeting is not properly configured"
+            });
+        }
+
+        // Compare passwords
+        const isPasswordValid = await bcrypt.compare(password, meeting.password);
+
+        if (!isPasswordValid) {
+            return res.status(401).json({
+                success: false,
+                message: "Incorrect password"
+            });
+        }
+
+        // Success case
+        return res.status(200).json({
+            success: true,
+            message: "Successfully joined meeting",
+            meetingCode: meeting_code
+        });
+
+    } catch (error) {
+        console.error("Join meeting error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error while joining meeting"
+        });
     }
-
-    return res.status(httpStatus.OK).json({ 
-      message: "Joined meeting successfully",
-      success: true,
-      meetingCode: meeting_code
-    });
-    
-  } catch (e) {
-    console.error("Error in joinMeeting function:", e);
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ 
-      message: "Error joining meeting",
-      success: false 
-    });
-  }
 };
 export { login, register, getUserHistory, addToHistory, joinMeeting };
