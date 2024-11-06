@@ -49,41 +49,6 @@ const handleCreateMeeting = async () => {
 };
 
 // Update handleJoinVideoCall:
-// In home.jsx
-
-// In home.jsx, update handleCreateMeeting:
-const handleCreateMeeting = async () => {
-    const password = prompt("Please set a password for the meeting:");
-    if (!password) return;
-
-    try {
-        const response = await fetch(`${server}/api/v1/meetings/create`, {  // Add server URL
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({
-                meetingCode,
-                password,
-                userId: localStorage.getItem("userId")
-            }),
-        });
-
-        const data = await response.json();
-        if (!data.success) {
-            alert(data.message);
-            return;
-        }
-
-        alert("Meeting created successfully!");
-        await addToUserHistory(meetingCode, password);
-    } catch (error) {
-        console.error("Error creating meeting:", error);
-        alert("Unable to create the meeting at this time.");
-    }
-};
-
 // Update handleJoinVideoCall:
 const handleJoinVideoCall = async () => {
     if (!meetingCode) {
