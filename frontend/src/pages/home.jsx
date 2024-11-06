@@ -68,15 +68,30 @@ const handleJoinVideoCall = async () => {
       body: JSON.stringify({ meetingCode, password }),
     });
 
+    // Parse response data
     const data = await response.json();
 
-    if (!response.ok) {
-      alert(data.message);
-      return;
+    // Check for error status codes
+    if (response.status === 401) {
+      alert("Incorrect password. Please try again.");
+      return; // Stop here - don't navigate
     }
 
-    alert("Joined meeting successfully!");
-    navigate(`/${meetingCode}`);
+    if (response.status === 404) {
+      alert("Meeting not found. Please check the meeting code.");
+      return; // Stop here - don't navigate
+    }
+
+    if (!response.ok) {
+      alert("An error occurred. Please try again.");
+      return; // Stop here - don't navigate
+    }
+
+    // Only navigate if we got a successful response
+    if (response.ok && data.meetingCode) {
+      alert("Joined meeting successfully!");
+      navigate(`/${data.meetingCode}`);
+    }
   } catch (error) {
     console.error("Error joining meeting:", error);
     alert("Unable to join the meeting at this time.");
