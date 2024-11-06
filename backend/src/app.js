@@ -11,11 +11,12 @@ const server = createServer(app);
 
 // Configure CORS for Express
 const corsOptions = {
-    origin: 'https://deploy-1-dxg9.onrender.com',
+    origin: ['https://deploy-1-dxg9.onrender.com', 'http://localhost:3000'], // Add your frontend URLs
     methods: 'GET, POST, PUT, DELETE',
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 };
+
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
