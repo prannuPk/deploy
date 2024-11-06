@@ -14,93 +14,74 @@ function HomeComponent() {
     const { addToUserHistory } = useContext(AuthContext);
     const socket = useSocket();
 
- const handleJoinVideoCall = async () => {
-  if (!meetingCode) {
-    alert("Please enter a meeting code.");
-    return;
-  }
+ // In home.jsx, update handleCreateMeeting:
+const handleCreateMeeting = async () => {
+    const password = prompt("Please set a password for the meeting:");
+    if (!password) return;
 
-  const password = prompt("Please enter the meeting password:");
-  if (!password) return;
+    try {
+        const response = await fetch("/api/v1/meetings/create", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({
+                meetingCode,
+                password,
+                userId: localStorage.getItem("userId") // Make sure you store this during login
+            }),
+        });
 
-  console.log("Meeting Code:", meetingCode);
-  console.log("Password:", password);
+        const data = await response.json();
 
-  try {
-   // In home.jsx, update the fetch URL in handleJoinVideoCall:
-const response = await fetch(`${server}/api/join_meeting`, {  // Update this line
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${localStorage.getItem("token")}`,
-  },
-  body: JSON.stringify({ meeting_code: meetingCode, password }), // Update to match the expected format
-});
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        alert("Incorrect password.");
-      } else if (response.status === 404) {
-        alert("Meeting not found.");
-      } else {
-        alert("An error occurred. Please try again.");
-      }
-      return;
-    }
-
-    let data;
-    const textResponse = await response.text();
-    if (textResponse) {
-      try {
-        data = JSON.parse(textResponse);
-      } catch (parseError) {
-        console.error("Failed to parse JSON response:", parseError);
-        alert("An unexpected error occurred. Please try again.");
-        return;
-      }
-    }
-
-    if (data && data.meetingCode) {
-      alert("Joined meeting successfully!");
-      navigate(`/${data.meetingCode}`);
-    } else {
-      alert("Joined meeting successfully!");
-      navigate(`/${meetingCode}`);
-    }
-  } catch (error) {
-    console.error("Error joining meeting:", error);
-    alert("Unable to join the meeting at this time.");
-  }
-};
-    const handleCreateMeeting = async () => {
-        const password = prompt("Please set a password for the meeting:");
-        if (!password) return;
-
-        try {
-            const response = await fetch("/api/add_to_activity", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
-                },
-                body: JSON.stringify({ meeting_code: meetingCode, password }),
-            });
-
-            console.log("Create Meeting Response:", response);
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                alert("Error creating meeting: " + errorText);
-                return;
-            }
-
-            await addToUserHistory(meetingCode, password);
-            alert("Meeting created successfully!");
-        } catch (error) {
-            console.error("Error creating meeting:", error);
-            alert("Unable to create the meeting at this time.");
+        if (!data.success) {
+            alert(data.message);
+            return;
         }
-    };
+
+        alert("Meeting created successfully!");
+        await addToUserHistory(meetingCode, password);
+    } catch (error) {
+        console.error("Error creating meeting:", error);
+        alert("Unable to create the meeting at this time.");
+    }
+};
+
+// Update handleJoinVideoCall:
+const handleJoinVideoCall = async () => {
+    if (!meetingCode) {
+        alert("Please enter a meeting code.");
+        return;
+    }
+
+    const password = prompt("Please enter the meeting password:");
+    if (!password) return;
+
+    try {
+        const response = await fetch("/api/v1/meetings/verify", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({ meetingCode, password }),
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            alert(data.message);
+            return;
+        }
+
+        alert("Joined meeting successfully!");
+        navigate(`/${meetingCode}`);
+    } catch (error) {
+        console.error("Error joining meeting:", error);
+        alert("Unable to join the meeting at this time.");
+    }
+};
 
     return (
         <>
