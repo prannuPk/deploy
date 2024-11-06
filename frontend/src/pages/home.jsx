@@ -49,55 +49,82 @@ const handleCreateMeeting = async () => {
 };
 
 // Update handleJoinVideoCall:
+// In home.jsx
+
 const handleJoinVideoCall = async () => {
-  if (!meetingCode) {
-    alert("Please enter a meeting code.");
-    return;
-  }
-
-  const password = prompt("Please enter the meeting password:");
-  if (!password) return;
-
-  try {
-    const response = await fetch("/api/v1/meetings/join_meeting", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({ meetingCode, password }),
-    });
-
-    // Parse response data
-    const data = await response.json();
-
-    // Check for error status codes
-    if (response.status === 401) {
-      alert("Incorrect password. Please try again.");
-      return; // Stop here - don't navigate
+    if (!meetingCode) {
+        alert("Please enter a meeting code.");
+        return;
     }
 
-    if (response.status === 404) {
-      alert("Meeting not found. Please check the meeting code.");
-      return; // Stop here - don't navigate
-    }
+    const password = prompt("Please enter the meeting password:");
+    if (!password) return;
 
-    if (!response.ok) {
-      alert("An error occurred. Please try again.");
-      return; // Stop here - don't navigate
-    }
+    try {
+        console.log("Attempting to join meeting with code:", meetingCode);
+        
+        const response = await fetch(`/api/join_meeting`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({ 
+                meeting_code: meetingCode,  // Changed to match backend expectation
+                password: password 
+            }),
+        });
 
-    // Only navigate if we got a successful response
-    if (response.ok && data.meetingCode) {
-      alert("Joined meeting successfully!");
-      navigate(`/${data.meetingCode}`);
+        // First check if response exists
+        if (!response) {
+            alert("No response from server");
+            return;
+        }
+
+        // Try to get the text response first
+        const responseText = await response.text();
+
+        // Check if response has content
+        if (!responseText) {
+            alert("Empty response from server");
+            return;
+        }
+
+        // Try to parse JSON
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error("Failed to parse server response:", responseText);
+            alert("Server response was not in the expected format");
+            return;
+        }
+
+        // Handle different response status codes
+        if (response.status === 401) {
+            alert(data.message || "Incorrect password. Please try again.");
+            return;
+        }
+
+        if (response.status === 404) {
+            alert(data.message || "Meeting not found. Please check the meeting code.");
+            return;
+        }
+
+        if (!response.ok) {
+            alert(data.message || "An error occurred. Please try again.");
+            return;
+        }
+
+        // If we get here, everything was successful
+        alert("Joined meeting successfully!");
+        navigate(`/${meetingCode}`);
+
+    } catch (error) {
+        console.error("Error joining meeting:", error);
+        alert("Unable to join the meeting. Please try again later.");
     }
-  } catch (error) {
-    console.error("Error joining meeting:", error);
-    alert("Unable to join the meeting at this time.");
-  }
 };
-
     return (
         <>
             <div className="navBar">
