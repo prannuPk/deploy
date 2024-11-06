@@ -26,7 +26,7 @@ app.use(express.json({ limit: "40kb" }));
 app.use(express.urlencoded({ limit: "40kb", extended: true }));
 
 // Define API routes
-app.use("/api", userRoutes); // Changed to match the frontend URL
+app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/meetings", meetingRoutes);
 
 // Add a basic error handling middleware
