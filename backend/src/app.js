@@ -17,37 +17,17 @@ const corsOptions = {
     credentials: true
 };
 
-// Use CORS middleware
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
-// Middleware to parse JSON and URL-encoded data
 app.use(express.json({ limit: "40kb" }));
 app.use(express.urlencoded({ limit: "40kb", extended: true }));
 
-// Define API routes
+// Routes
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/meetings", meetingRoutes);
 
-// Add a basic error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        success: false,
-        message: "Internal server error",
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
-});
-
-// Add a route not found handler
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        message: "Route not found"
-    });
-});
-
-// Configure Socket.IO with CORS settings
+// Configure Socket.IO
 const io = connectToSocket(server, {
     cors: {
         origin: 'https://deploy-1-dxg9.onrender.com',
@@ -57,43 +37,21 @@ const io = connectToSocket(server, {
     }
 });
 
-// Set the port
 app.set("port", process.env.PORT || 8000);
 
-// Connect to the database and start the server
 const start = async () => {
-    try {
-        const connectionDb = await mongoose.connect(
-            "mongodb+srv://praneethapkr1218:iompProject@cluster0.dakiq.mongodb.net/",
-            {
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
-            }
-        );
-        
-        console.log(`MongoDB Connected: ${connectionDb.connection.host}`);
-        
-        server.listen(app.get("port"), () => {
-            console.log(`Server is running on port ${app.get("port")}`);
-            console.log(`API is available at http://localhost:${app.get("port")}/api`);
-        });
-    } catch (error) {
-        console.error("Error starting server:", error);
-        process.exit(1);
-    }
+   try {
+      const connectionDb = await mongoose.connect(
+         "mongodb+srv://praneethapkr1218:iompProject@cluster0.dakiq.mongodb.net/"
+      );
+      console.log(`MONGO Connected DB Host: ${connectionDb.connection.host}`);
+      
+      server.listen(app.get("port"), () => {
+         console.log(`Server is listening on port ${app.get("port")}`);
+      });
+   } catch (error) {
+      console.error("Error connecting to the database:", error);
+   }
 };
 
-// Add graceful shutdown
-process.on('SIGTERM', () => {
-    console.log('SIGTERM signal received: closing HTTP server');
-    server.close(() => {
-        console.log('HTTP server closed');
-        mongoose.connection.close(false, () => {
-            console.log('MongoDB connection closed');
-            process.exit(0);
-        });
-    });
-});
-
-// Call the start function
 start();
