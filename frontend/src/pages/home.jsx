@@ -51,6 +51,40 @@ const handleCreateMeeting = async () => {
 // Update handleJoinVideoCall:
 // In home.jsx
 
+// In home.jsx, update handleCreateMeeting:
+const handleCreateMeeting = async () => {
+    const password = prompt("Please set a password for the meeting:");
+    if (!password) return;
+
+    try {
+        const response = await fetch(`${server}/api/v1/meetings/create`, {  // Add server URL
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({
+                meetingCode,
+                password,
+                userId: localStorage.getItem("userId")
+            }),
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+            alert(data.message);
+            return;
+        }
+
+        alert("Meeting created successfully!");
+        await addToUserHistory(meetingCode, password);
+    } catch (error) {
+        console.error("Error creating meeting:", error);
+        alert("Unable to create the meeting at this time.");
+    }
+};
+
+// Update handleJoinVideoCall:
 const handleJoinVideoCall = async () => {
     if (!meetingCode) {
         alert("Please enter a meeting code.");
@@ -63,34 +97,30 @@ const handleJoinVideoCall = async () => {
     try {
         console.log("Attempting to join meeting with code:", meetingCode);
         
-        const response = await fetch(`/api/join_meeting`, {
+        const response = await fetch(`${server}/api/v1/meetings/join_meeting`, { // Add server URL and correct endpoint
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${localStorage.getItem("token")}`,
             },
             body: JSON.stringify({ 
-                meeting_code: meetingCode,  // Changed to match backend expectation
+                meetingCode: meetingCode,
                 password: password 
             }),
         });
 
-        // First check if response exists
         if (!response) {
             alert("No response from server");
             return;
         }
 
-        // Try to get the text response first
         const responseText = await response.text();
 
-        // Check if response has content
         if (!responseText) {
             alert("Empty response from server");
             return;
         }
 
-        // Try to parse JSON
         let data;
         try {
             data = JSON.parse(responseText);
@@ -100,7 +130,6 @@ const handleJoinVideoCall = async () => {
             return;
         }
 
-        // Handle different response status codes
         if (response.status === 401) {
             alert(data.message || "Incorrect password. Please try again.");
             return;
@@ -116,7 +145,6 @@ const handleJoinVideoCall = async () => {
             return;
         }
 
-        // If we get here, everything was successful
         alert("Joined meeting successfully!");
         navigate(`/${meetingCode}`);
 
