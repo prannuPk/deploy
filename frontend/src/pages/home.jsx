@@ -27,14 +27,15 @@ function HomeComponent() {
   console.log("Password:", password);
 
   try {
-    const response = await fetch("/api/v1/meetings/join_meeting", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({ meetingCode, password }),
-    });
+   // In home.jsx, update the fetch URL in handleJoinVideoCall:
+const response = await fetch(`${server}/api/join_meeting`, {  // Update this line
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+  },
+  body: JSON.stringify({ meeting_code: meetingCode, password }), // Update to match the expected format
+});
 
     if (!response.ok) {
       if (response.status === 401) {
