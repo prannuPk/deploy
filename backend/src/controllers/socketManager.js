@@ -21,6 +21,70 @@ export const connectToSocket = (server) => {
 
   io.on("connection", (socket) => {
     console.log("Client connected:", socket.id);
+    socket.on("schedule-meeting", async ({ meetingCode, password, scheduledDateTime, scheduledTitle }) => {
+      try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const meeting = new Meeting({
+          meetingCode,
+          password: hashedPassword,
+          isScheduled: true,
+          scheduledDateTime: new Date(scheduledDateTime),
+          scheduledTitle,
+          status: 'pending',
+          user_id: socket.user_id // Assuming you're passing user_id with socket connection
+        });
+
+        await meeting.save();
+        socket.emit("meeting-scheduled", { 
+          meetingCode: meeting.meetingCode,
+          scheduledDateTime: meeting.scheduledDateTime,
+          scheduledTitle: meeting.scheduledTitle 
+        });
+      } catch (error) {
+        console.error("Scheduling error:", error);
+        socket.emit("scheduling-error", { message: error.message });
+      }
+    });
+
+    // Add event to fetch scheduled meetings
+    socket.on("get-scheduled-meetings", async (userId) => {
+      try {
+        const scheduledMeetings = await Meeting.find({
+          user_id: userId,
+          isScheduled: true,
+          status: { $in: ['pending', 'active'] }
+        }).sort({ scheduledDateTime: 1 });
+        
+        socket.emit("scheduled-meetings-list", scheduledMeetings);
+      } catch (error) {
+        console.error("Error fetching scheduled meetings:", error);
+        socket.emit("scheduling-error", { message: error.message });
+      }
+    });
+
+    // Add event to cancel scheduled meeting
+    socket.on("cancel-scheduled-meeting", async ({ meetingCode, userId }) => {
+      try {
+        const meeting = await Meeting.findOne({ 
+          meetingCode, 
+          user_id: userId,
+          isScheduled: true,
+          status: 'pending'
+        });
+
+        if (meeting) {
+          meeting.status = 'cancelled';
+          await meeting.save();
+          socket.emit("meeting-cancelled", { meetingCode });
+        } else {
+          socket.emit("scheduling-error", { message: "Meeting not found or cannot be cancelled" });
+        }
+      } catch (error) {
+        console.error("Error cancelling meeting:", error);
+        socket.emit("scheduling-error", { message: error.message });
+      }
+    });
+
 
     // Event for joining a meeting with password validation
     socket.on("join-meeting", async ({ meetingCode, password }) => {
