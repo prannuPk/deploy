@@ -6,7 +6,8 @@ export const SocketContext = createContext();
 
 export const SocketProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
-const socket = io(server);
+  const [scheduledMeetings, setScheduledMeetings] = useState([]);
+  const socket = io(server);
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -15,6 +16,25 @@ const socket = io(server);
 
     socket.on("message", (message) => {
       setMessages((prevMessages) => [...prevMessages, message]);
+    });
+
+    socket.on("meeting-scheduled", (meeting) => {
+      setScheduledMeetings(prev => [...prev, meeting]);
+    });
+
+    socket.on("scheduled-meetings-list", (meetings) => {
+      setScheduledMeetings(meetings);
+    });
+
+    socket.on("meeting-cancelled", ({ meetingCode }) => {
+      setScheduledMeetings(prev => 
+        prev.filter(meeting => meeting.meetingCode !== meetingCode)
+      );
+    });
+
+    socket.on("scheduling-error", ({ message }) => {
+      console.error("Scheduling error:", message);
+      alert(message);
     });
 
     socket.on("disconnect", () => {
@@ -26,6 +46,18 @@ const socket = io(server);
     };
   }, []);
 
+  const scheduleMeeting = (meetingDetails) => {
+    socket.emit("schedule-meeting", meetingDetails);
+  };
+
+  const getScheduledMeetings = (userId) => {
+    socket.emit("get-scheduled-meetings", userId);
+  };
+
+  const cancelScheduledMeeting = (meetingCode, userId) => {
+    socket.emit("cancel-scheduled-meeting", { meetingCode, userId });
+  };
+
   const sendMessage = (message) => {
     socket.emit("message", message);
   };
@@ -33,6 +65,10 @@ const socket = io(server);
   const data = {
     messages,
     sendMessage,
+    scheduledMeetings,
+    scheduleMeeting,
+    getScheduledMeetings,
+    cancelScheduledMeeting,
   };
 
   return (
@@ -40,7 +76,6 @@ const socket = io(server);
   );
 };
 
-// Hook to use the socket context
 export const useSocket = () => {
   return useContext(SocketContext);
 };
