@@ -30,7 +30,7 @@ app.use("/api/v1/meetings", meetingRoutes);
 // Configure Socket.IO
 const io = connectToSocket(server, {
     cors: {
-        origin: 'https://deploy-a862.onrender.com,
+        origin: 'https://deploy-a862.onrender.com',
         methods: ["GET", "POST"],
         allowedHeaders: ["Content-Type", "Authorization"],
         credentials: true
