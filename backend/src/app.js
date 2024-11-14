@@ -51,7 +51,7 @@ app.set("port", process.env.PORT || 8000);
 const start = async () => {
    try {
       const connectionDb = await mongoose.connect(
-         "mongodb+srv://yeetboy1218:Prannu@cluster0.zahon.mongodb.net/"
+         "mongodb+srv://yeetboy1218:Prannu1218@cluster0.zahon.mongodb.net/"
       );
       console.log(`MONGO Connected DB Host: ${connectionDb.connection.host}`);
       
