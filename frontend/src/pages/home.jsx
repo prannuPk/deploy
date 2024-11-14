@@ -10,13 +10,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  FormControlLabel,
-  Switch,
   Typography
 } from "@mui/material";
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import RestoreIcon from "@mui/icons-material/Restore";
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import { AuthContext } from "../contexts/AuthContext";
@@ -26,10 +21,10 @@ import server from '../environment';
 function HomeComponent() {
     const navigate = useNavigate();
     const [meetingCode, setMeetingCode] = useState("");
-    const { addToUserHistory, userData } = useContext(AuthContext);
+    const { addToUser History, userData } = useContext(AuthContext);
     const { scheduledMeetings, scheduleMeeting, getScheduledMeetings, cancelScheduledMeeting } = useSocket();
     const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
-    const [scheduleDate, setScheduleDate] = useState(new Date());
+    const [scheduleDate, setScheduleDate] = useState(new Date().toISOString().slice(0, 16)); // Default to current date and time
     const [meetingTitle, setMeetingTitle] = useState("");
     const [showScheduledMeetings, setShowScheduledMeetings] = useState(false);
 
@@ -60,7 +55,7 @@ function HomeComponent() {
                 return;
             }
 
-            await addToUserHistory(meetingCode, password);
+            await addToUser History(meetingCode, password);
             alert("Meeting created successfully!");
         } catch (error) {
             console.error("Error creating meeting:", error);
@@ -129,142 +124,55 @@ function HomeComponent() {
         const meetingDetails = {
             meetingCode: Math.random().toString(36).substring(2, 8),
             password,
-            scheduledDateTime: scheduleDate.toISOString(),
-            scheduledTitle: meetingTitle,
-            userId: userData?.userId
-        };
+            scheduledDateTime: scheduleDate,
+            scheduledTitle: meetingTitle };
 
         scheduleMeeting(meetingDetails);
         setIsScheduleDialogOpen(false);
         setMeetingTitle("");
-    };
-
-    const handleCancelMeeting = (meetingCode) => {
-        if (window.confirm("Are you sure you want to cancel this meeting?")) {
-            cancelScheduledMeeting(meetingCode, userData?.userId);
-        }
+        setScheduleDate(new Date().toISOString().slice(0, 16)); // Reset to current date and time
     };
 
     return (
-        <>
-            <div className="navBar">
-                <div style={{ display: "flex", alignItems: "center" }}>
-                    <h2>LinkUp</h2>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-                    <IconButton onClick={() => navigate("/history")}>
-                        <RestoreIcon />
-                    </IconButton>
-                    <IconButton onClick={() => setShowScheduledMeetings(!showScheduledMeetings)}>
-                        <ScheduleIcon />
-                    </IconButton>
-                    <Button
-                        onClick={() => {
-                            localStorage.removeItem("token");
-                            navigate("/auth");
-                        }}
-                    >
-                        Logout
-                    </Button>
-                </div>
-            </div>
-
-            <div className="meetContainer">
-                <div className="leftPanel">
-                    {!showScheduledMeetings ? (
-                        <div>
-                            <h2>Providing Quality Video Call Just Like Quality Education</h2>
-                            <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
-                                <TextField
-                                    onChange={(e) => setMeetingCode(e.target.value)}
-                                    label="Meeting Code"
-                                    variant="outlined"
-                                />
-                                <Button onClick={handleJoinVideoCall} variant="contained">
-                                    Join
-                                </Button>
-                                <Button onClick={handleCreateMeeting} variant="contained">
-                                    Create Meeting
-                                </Button>
-                            </div>
-                            <Button 
-                                onClick={() => setIsScheduleDialogOpen(true)}
-                                variant="outlined"
-                                startIcon={<ScheduleIcon />}
-                            >
-                                Schedule Meeting
-                            </Button>
-                        </div>
-                    ) : (
-                        <div>
-                            <h2>Scheduled Meetings</h2>
-                            {scheduledMeetings.length === 0 ? (
-                                <Typography>No scheduled meetings found</Typography>
-                            ) : (
-                                scheduledMeetings.map((meeting) => (
-                                    <div key={meeting.meetingCode} style={{ 
-                                        border: '1px solid #ddd', 
-                                        padding: '15px',
-                                        margin: '10px 0',
-                                        borderRadius: '4px'
-                                    }}>
-                                        <Typography variant="h6">{meeting.scheduledTitle}</Typography>
-                                        <Typography>
-                                            {new Date(meeting.scheduledDateTime).toLocaleString('en-IN', { 
-                                                timeZone: 'Asia/Kolkata'
-                                            })}
-                                        </Typography>
-                                        <Typography>Code: {meeting.meetingCode}</Typography>
-                                        <Button 
-                                            onClick={() => handleCancelMeeting(meeting.meetingCode)}
-                                            color="error"
-                                            variant="outlined"
-                                            size="small"
-                                            style={{ marginTop: '10px' }}
-                                        >
-                                            Cancel Meeting
-                                        </Button>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    )}
-                </div>
-                <div className="rightPanel">
-                    <img src="/logo3.png" alt="" />
-                </div>
-            </div>
-
-            {/* Schedule Meeting Dialog */}
+        <div className="home-container">
+            <h1>Welcome to the Meeting Scheduler</h1>
+            <TextField
+                label="Meeting Code"
+                value={meetingCode}
+                onChange={(e) => setMeetingCode(e.target.value)}
+            />
+            <Button onClick={handleJoinVideoCall} variant="contained" color="primary">
+                Join Meeting
+            </Button>
+            <IconButton onClick={() => setIsScheduleDialogOpen(true)}>
+                <ScheduleIcon />
+            </IconButton>
             <Dialog open={isScheduleDialogOpen} onClose={() => setIsScheduleDialogOpen(false)}>
-                <DialogTitle>Schedule New Meeting</DialogTitle>
+                <DialogTitle>Schedule a Meeting</DialogTitle>
                 <DialogContent>
                     <TextField
-                        autoFocus
-                        margin="dense"
                         label="Meeting Title"
-                        fullWidth
-                        variant="outlined"
                         value={meetingTitle}
                         onChange={(e) => setMeetingTitle(e.target.value)}
-                        style={{ marginBottom: '20px' }}
                     />
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                        <DateTimePicker
-                            label="Meeting Date & Time (IST)"
-                            value={scheduleDate}
-                            onChange={(newValue) => setScheduleDate(newValue)}
-                            format="dd/MM/yyyy hh:mm a"
-                            minDateTime={new Date()}
-                        />
-                    </LocalizationProvider>
+                    <TextField
+                        label="Schedule Date and Time"
+                        type="datetime-local"
+                        value={scheduleDate}
+                        onChange={(e) => setScheduleDate(e.target.value)}
+                    />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setIsScheduleDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleScheduleMeeting} variant="contained">Schedule</Button>
+                    <Button onClick={() => setIsScheduleDialogOpen(false)} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleScheduleMeeting} color="primary">
+                        Schedule
+                    </Button>
                 </DialogActions>
             </Dialog>
-        </>
+            {/* Render scheduled meetings if needed */}
+        </div>
     );
 }
 
