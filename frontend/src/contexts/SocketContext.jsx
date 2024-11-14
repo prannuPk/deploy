@@ -34,7 +34,7 @@ export const SocketProvider = ({ children }) => {
 
     socket.on("scheduling-error", ({ message }) => {
       console.error("Scheduling error:", message);
-      alert(message);
+      alert(message); // Alert user of scheduling error
     });
 
     socket.on("disconnect", () => {
@@ -44,38 +44,48 @@ export const SocketProvider = ({ children }) => {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [socket]);
 
   const scheduleMeeting = (meetingDetails) => {
-    socket.emit("schedule-meeting", meetingDetails);
+    socket.emit("schedule-meeting", meetingDetails, (response) => {
+      if (response.error) {
+        console.error("Error scheduling meeting:", response.error);
+        alert(response.error); // Alert user of scheduling error
+      } else {
+        console.log("Meeting scheduled successfully:", response);
+      }
+    });
   };
 
-  const getScheduledMeetings = (userId) => {
-    socket.emit("get-scheduled-meetings", userId);
+  const getScheduledMeetings = () => {
+    socket.emit("get-scheduled-meetings", (response) => {
+      if (response.error) {
+        console.error("Error fetching scheduled meetings:", response.error);
+        alert(response.error); // Alert user of fetching error
+      } else {
+        setScheduledMeetings(response.meetings);
+      }
+    });
   };
 
-  const cancelScheduledMeeting = (meetingCode, userId) => {
-    socket.emit("cancel-scheduled-meeting", { meetingCode, userId });
-  };
-
-  const sendMessage = (message) => {
-    socket.emit("message", message);
+  const cancelScheduledMeeting = (meetingCode) => {
+    socket.emit("cancel-scheduled-meeting", { meetingCode }, (response) => {
+      if (response.error) {
+        console.error("Error cancelling meeting:", response.error);
+        alert(response.error); // Alert user of cancellation error
+      } else {
+        console.log("Meeting cancelled successfully:", response);
+      }
+    });
   };
 
   const data = {
     messages,
-    sendMessage,
     scheduledMeetings,
     scheduleMeeting,
     getScheduledMeetings,
     cancelScheduledMeeting,
   };
 
-  return (
-    <SocketContext.Provider value={data}>{children}</SocketContext.Provider>
-  );
-};
-
-export const useSocket = () => {
-  return useContext(SocketContext);
+  return <SocketContext.Provider value={data}>{children}</SocketContext.Provider>;
 };
