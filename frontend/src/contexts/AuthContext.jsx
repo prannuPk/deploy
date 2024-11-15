@@ -13,7 +13,7 @@ const client = axios.create({
 });
 
 export const AuthProvider = ({ children }) => {
-  const [userData, setUser Data] = useState(null); // Initialize userData to null
+  const [userData, setUserData] = useState(null); // Initialize userData to null
   const router = useNavigate();
 
   // Log the server URL to ensure it's correct
@@ -32,12 +32,7 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (err) {
       console.error("Registration error:", err);
-      // Improved error handling
-      if (err.response) {
-        throw new Error(err.response.data.message || "Registration failed");
-      } else {
-        throw new Error("Network error. Please try again later.");
-      }
+      throw err;
     }
   };
 
@@ -50,21 +45,17 @@ export const AuthProvider = ({ children }) => {
 
       if (request.status === httpStatus.OK) {
         localStorage.setItem("token", request.data.token);
-        setUser Data(request.data); // You might want to set userData here
+        // Set user data in state if needed
+        setUserData(request.data); // You might want to set userData here
         router("/home");
       }
     } catch (err) {
       console.error("Login error:", err);
-      // Improved error handling
-      if (err.response) {
-        throw new Error(err.response.data.message || "Login failed");
-      } else {
-        throw new Error("Network error. Please try again later.");
-      }
+      throw err;
     }
   };
 
-  const getHistoryOfUser  = async () => {
+  const getHistoryOfUser = async () => {
     try {
       const request = await client.get("/get_all_activity", {
         params: {
@@ -74,29 +65,30 @@ export const AuthProvider = ({ children }) => {
       return request.data;
     } catch (err) {
       console.error("Error fetching user history:", err);
-      throw new Error("Failed to fetch user history. Please try again later.");
+      throw err;
     }
   };
 
-  const addToUser History = async (meetingCode, password) => {
+ const addToUserHistory = async (meetingCode, password) => {
     try {
-      const request = await client.post("/add_to_activity", {
-        token: localStorage.getItem("token"), // Ensure the token is included
-        meeting_code: meetingCode,
-        password: password, // Include password if needed
-      });
-      return request.data; // Return the response data for further handling
+        const request = await client.post("/add_to_activity", {
+            token: localStorage.getItem("token"), // Ensure the token is included
+            meeting_code: meetingCode,
+            password: password, // Include password if needed
+        });
+        return request.data; // Return the response data for further handling
     } catch (e) {
-      console.error("Error adding to user history:", e);
-      throw new Error("Failed to add meeting to history. Please try again later.");
+        console.error("Error adding to user history:", e);
+        throw e;
     }
-  };
+};
+
 
   const data = {
     userData,
-    setUser Data,
-    addToUser History,
-    getHistoryOfUser ,
+    setUserData,
+    addToUserHistory,
+    getHistoryOfUser,
     handleRegister,
     handleLogin,
   };
