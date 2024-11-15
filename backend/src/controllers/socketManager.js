@@ -1,5 +1,5 @@
 import { Server } from "socket.io";
-import bcrypt from "bcrypt"; // Ensure bcrypt is imported
+import bcrypt from "bcrypt";
 import { Meeting } from "../models/meeting.model.js";
 
 let connections = {};
@@ -7,162 +7,114 @@ let messages = {};
 let timeOnline = {};
 
 export const connectToSocket = (server) => {
- const io = new Server(server, {
-  cors: {
-    origin: "https://deploy-a862.onrender.com", // Replace with your actual frontend URL
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  },
-  path: "/socket.io", // Ensure the path matches the frontend
-  transports: ["websocket", "polling"], // Allows both WebSocket and polling as a fallback
-});
-
+  const io = new Server(server, {
+    cors: {
+      origin: "https://deploy-1-dxg9.onrender.com",
+      methods: ["GET", "POST"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+      credentials: true,
+    }
+  });
 
   io.on("connection", (socket) => {
-    console.log("Client connected:", socket.id);
-    socket.on("schedule-meeting", async ({ meetingCode, password, scheduledDateTime, scheduledTitle }) => {
-      try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const meeting = new Meeting({
-          meetingCode,
-          password: hashedPassword,
-          isScheduled: true,
-          scheduledDateTime: new Date(scheduledDateTime),
-          scheduledTitle,
-          status: 'pending',
-          user_id: socket.user_id // Assuming you're passing user_id with socket connection
-        });
+    console.log("SOMETHING CONNECTED", socket.id);
 
-        await meeting.save();
-        socket.emit("meeting-scheduled", { 
-          meetingCode: meeting.meetingCode,
-          scheduledDateTime: meeting.scheduledDateTime,
-          scheduledTitle: meeting.scheduledTitle 
-        });
-      } catch (error) {
-        console.error("Scheduling error:", error);
-        socket.emit("scheduling-error", { message: error.message });
-      }
-    });
-
-    // Add event to fetch scheduled meetings
-    socket.on("get-scheduled-meetings", async (userId) => {
+    socket.on("join-call", async (path) => {
       try {
-        const scheduledMeetings = await Meeting.find({
-          user_id: userId,
-          isScheduled: true,
-          status: { $in: ['pending', 'active'] }
-        }).sort({ scheduledDateTime: 1 });
+        // Extract meeting code from path
+        const meetingCode = path.split('/').pop();
         
-        socket.emit("scheduled-meetings-list", scheduledMeetings);
-      } catch (error) {
-        console.error("Error fetching scheduled meetings:", error);
-        socket.emit("scheduling-error", { message: error.message });
-      }
-    });
-
-    // Add event to cancel scheduled meeting
-    socket.on("cancel-scheduled-meeting", async ({ meetingCode, userId }) => {
-      try {
-        const meeting = await Meeting.findOne({ 
-          meetingCode, 
-          user_id: userId,
-          isScheduled: true,
-          status: 'pending'
-        });
-
-        if (meeting) {
-          meeting.status = 'cancelled';
-          await meeting.save();
-          socket.emit("meeting-cancelled", { meetingCode });
-        } else {
-          socket.emit("scheduling-error", { message: "Meeting not found or cannot be cancelled" });
-        }
-      } catch (error) {
-        console.error("Error cancelling meeting:", error);
-        socket.emit("scheduling-error", { message: error.message });
-      }
-    });
-
-
-    // Event for joining a meeting with password validation
-    socket.on("join-meeting", async ({ meetingCode, password }) => {
-      try {
+        // Find meeting in database
         const meeting = await Meeting.findOne({ meetingCode });
         if (!meeting) {
-          return socket.emit("join-failed", "Meeting not found");
+          socket.emit("join-failed", "Meeting not found");
+          return;
         }
 
-        const isPasswordCorrect = await bcrypt.compare(password, meeting.password);
-        if (!isPasswordCorrect) {
-          return socket.emit("join-failed", "Invalid password");
+        // Initialize connections for this path if it doesn't exist
+        if (connections[path] === undefined) {
+          connections[path] = [];
         }
-
-        // Add user to the meeting if password is valid
-        if (!connections[meetingCode]) {
-          connections[meetingCode] = [];
-        }
-        connections[meetingCode].push(socket.id);
+        
+        connections[path].push(socket.id);
         timeOnline[socket.id] = new Date();
 
-        // Notify other users in the meeting about the new connection
-        connections[meetingCode].forEach((connId) => {
-          io.to(connId).emit("user-joined", socket.id, connections[meetingCode]);
-        });
+        // Notify all users in the room about the new connection
+        for (let a = 0; a < connections[path].length; a++) {
+          io.to(connections[path][a]).emit("user-joined", socket.id, connections[path]);
+        }
 
         // Send existing messages to the new participant
-        if (messages[meetingCode]) {
-          messages[meetingCode].forEach((msg) => {
-            io.to(socket.id).emit("chat-message", msg.data, msg.sender, msg["socket-id-sender"]);
-          });
+        if (messages[path] !== undefined) {
+          for (let a = 0; a < messages[path].length; ++a) {
+            io.to(socket.id).emit(
+              "chat-message",
+              messages[path][a].data,
+              messages[path][a].sender,
+              messages[path][a]["socket-id-sender"]
+            );
+          }
         }
       } catch (error) {
-        console.error("Error during join-meeting:", error);
+        console.error("Error during join-call:", error);
         socket.emit("join-failed", "Error joining meeting");
       }
     });
 
-    // Handle signaling for WebRTC
     socket.on("signal", (toId, message) => {
       io.to(toId).emit("signal", socket.id, message);
     });
 
-    // Handle chat messages
     socket.on("chat-message", (data, sender) => {
-      const room = Object.keys(connections).find((key) => connections[key].includes(socket.id));
+      // Find which room this socket is in
+      const [matchingRoom, found] = Object.entries(connections)
+        .reduce(([room, isFound], [roomKey, roomValue]) => {
+          if (!isFound && roomValue.includes(socket.id)) {
+            return [roomKey, true];
+          }
+          return [room, isFound];
+        }, ['', false]);
 
-      if (room) {
-        if (!messages[room]) {
-          messages[room] = [];
+      if (found) {
+        if (messages[matchingRoom] === undefined) {
+          messages[matchingRoom] = [];
         }
-        messages[room].push({
-          sender,
-          data,
-          "socket-id-sender": socket.id,
+        
+        messages[matchingRoom].push({
+          sender: sender,
+          data: data,
+          "socket-id-sender": socket.id
         });
 
-        connections[room].forEach((connId) => {
-          io.to(connId).emit("chat-message", data, sender, socket.id);
+        console.log("message", matchingRoom, ":", sender, data);
+        
+        // Send to all users in the room
+        connections[matchingRoom].forEach((elem) => {
+          io.to(elem).emit("chat-message", data, sender, socket.id);
         });
       }
     });
 
-    // Handle disconnections
     socket.on("disconnect", () => {
-      const disconnectedTime = Math.abs(timeOnline[socket.id] - new Date());
-      for (const [room, connIds] of Object.entries(connections)) {
-        if (connIds.includes(socket.id)) {
-          connIds.forEach((connId) => io.to(connId).emit("user-left", socket.id));
-
-          // Remove user from room
-          connections[room] = connIds.filter((id) => id !== socket.id);
-          if (connections[room].length === 0) {
-            delete connections[room];
+      var diffTime = Math.abs(timeOnline[socket.id] - new Date());
+      
+      for (const [k, v] of JSON.parse(JSON.stringify(Object.entries(connections)))) {
+        for (let a = 0; a < v.length; ++a) {
+          if (v[a] === socket.id) {
+            for (let a = 0; a < connections[k].length; ++a) {
+              io.to(connections[k][a]).emit('user-left', socket.id);
+            }
+            
+            var index = connections[k].indexOf(socket.id);
+            connections[k].splice(index, 1);
+            
+            if (connections[k].length === 0) {
+              delete connections[k];
+            }
           }
-          break;
         }
       }
+      
       delete timeOnline[socket.id];
     });
   });
